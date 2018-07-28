@@ -43,7 +43,9 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		--version $(VERSION) \
 		--verbose \
 		$(NAME)
-	ar -p build/deb/$(NAME)_$(VERSION)_amd64.deb | tar -ztf -
+	dpkg-deb --info build/deb/$(NAME)_$(VERSION)_amd64.deb
+	dpkg -c build/deb/$(NAME)_$(VERSION)_amd64.deb
+	ar -x build/deb/$(NAME)_$(VERSION)_amd64.deb
 
 build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 	mkdir -p build/rpm && fpm \
