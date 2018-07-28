@@ -18,7 +18,18 @@ build:
 	@$(MAKE) build/linux/$(NAME)
 	@$(MAKE) build/deb/$(NAME)_$(VERSION)_amd64.deb
 	@$(MAKE) build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm
-	@$(MAKE) docker-image
+
+build-docker-image:
+	docker build -q -f Dockerfile.build -t $(IMAGE_NAME):$(BUILD_TAG) .
+
+build-in-docker:
+	docker build --rm -f Dockerfile.build -t $(IMAGE_NAME):build .
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
+		-v /var/lib/docker:/var/lib/docker \
+		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
+		-e IMAGE_NAME=$(IMAGE_NAME) -e BUILD_TAG=$(BUILD_TAG) -e VERSION=master \
+		$(IMAGE_NAME):build make -e deps build
+	# docker rmi $(IMAGE_NAME):build || true
 
 build/darwin/$(NAME):
 	mkdir -p build/darwin && CGO_ENABLED=0 GOOS=darwin go build -a -ldflags "-X main.Version=$(VERSION)" -o build/darwin/$(NAME)
@@ -40,6 +51,7 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		--package build/deb/$(NAME)_$(VERSION)_amd64.deb \
 		--prefix /usr/local/bin \
 		--url "https://github.com/$(MAINTAINER)/$(REPOSITORY)" \
+		--vendor "" \
 		--version $(VERSION) \
 		--verbose \
 		$(NAME)
@@ -59,6 +71,7 @@ build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 		--prefix /usr/local/bin \
 		--rpm-os linux \
 		--url "https://github.com/$(MAINTAINER)/$(REPOSITORY)" \
+		--vendor "" \
 		--version $(VERSION) \
 		--verbose \
 		$(NAME)
@@ -77,15 +90,10 @@ clean:
 circleci:
 	docker version
 	rm -f ~/.gitconfig
-	sudo apt install apt-transport-https build-essential curl gnupg2 rpm rsync rubygems-integration ruby-dev ruby -qy
-	sudo gem install --no-ri --no-rdoc --quiet fpm
 
 deps:
 	go get -u github.com/progrium/gh-release/...
 	dep ensure -vendor-only
-
-docker-image:
-	docker build -q -f Dockerfile.build -t $(IMAGE_NAME):$(BUILD_TAG) .
 
 release: build
 	rm -rf release && mkdir release
