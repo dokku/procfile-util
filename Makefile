@@ -2,7 +2,7 @@ NAME = procfile-util
 MAINTAINER = josegonzalez
 REPOSITORY = go-procfile-util
 HARDWARE = $(shell uname -m)
-VERSION ?= 0.0.1
+VERSION ?= 0.0.2
 IMAGE_NAME ?= $(MAINTAINER)/$(NAME)
 BUILD_TAG ?= dev
 define DESCRIPTION
