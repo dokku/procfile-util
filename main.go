@@ -229,7 +229,7 @@ func main() {
 	showCmd := parser.NewCommand("show", "show the command for a specific process type")
 	allowGetenvShowFlag := showCmd.Flag("a", "allow-getenv", &argparse.Options{Help: "allow the use of the existing env when expanding commands"})
 	envPathShowFlag := showCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
-	processTypeShowFlag := showCmd.String("p", "process-type", &argparse.Options{Help: "name of process to retrieve"})
+	processTypeShowFlag := showCmd.String("p", "process-type", &argparse.Options{Help: "name of process to retrieve", Required: true})
 
 	err := parser.Parse(os.Args)
 	if err != nil {
