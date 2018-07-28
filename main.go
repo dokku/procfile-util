@@ -17,6 +17,9 @@ type procfileEntry struct {
 	Command string
 }
 
+const defaultPort = "5000"
+const portEnvVar = "PORT"
+
 func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	var entries []procfileEntry
 	re, _ := regexp.Compile(`^([A-Za-z0-9_]+)` + delimiter + `\s*(.+)$`)
@@ -61,13 +64,29 @@ func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	return entries, nil
 }
 
-func expandEnv(s string, envPath string, allowEnv bool) (string, error) {
-	expandFunc := func(key string) string {
+func expandEnv(e procfileEntry, envPath string, allowEnv bool) (string, error) {
+	baseExpandFunc := func(key string) string {
+		if key == "PS" {
+			return os.Getenv("PS")
+		}
+		if key == portEnvVar {
+			return defaultPort
+		}
 		return ""
 	}
 
+	expandFunc := func(key string) string {
+		return baseExpandFunc(key)
+	}
+
 	if allowEnv {
-		expandFunc = os.Getenv
+		expandFunc = func(key string) string {
+			value := os.Getenv(key)
+			if value == "" {
+				value = baseExpandFunc(key)
+			}
+			return value
+		}
 	}
 
 	if envPath != "" {
@@ -86,15 +105,20 @@ func expandEnv(s string, envPath string, allowEnv bool) (string, error) {
 			if val, ok := env[key]; ok {
 				return val
 			}
+			value := ""
 			if allowEnv {
-				return os.Getenv(key)
+				value = os.Getenv(key)
 			}
-			return ""
+			if value == "" {
+				value = baseExpandFunc(key)
+			}
+			return value
 		}
 	}
 
+	os.Setenv("PS", e.Name)
 	os.Setenv("EXPENV_PARENTHESIS", "$(")
-	s = strings.Replace(s, "$(", "${EXPENV_PARENTHESIS}", -1)
+	s := strings.Replace(e.Command, "$(", "${EXPENV_PARENTHESIS}", -1)
 	return os.Expand(s, expandFunc), nil
 }
 
@@ -129,7 +153,7 @@ func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, pr
 	hasErrors := false
 	commands := make(map[string]string)
 	for _, entry := range entries {
-		command, err := expandEnv(entry.Command, envPath, allowGetenv)
+		command, err := expandEnv(entry, envPath, allowGetenv)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error processing command: %s\n", err)
 			hasErrors = true
@@ -171,7 +195,7 @@ func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, proc
 		return false
 	}
 
-	command, err := expandEnv(foundEntry.Command, envPath, allowGetenv)
+	command, err := expandEnv(foundEntry, envPath, allowGetenv)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error processing command: %s\n", err)
 		return false
