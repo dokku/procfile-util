@@ -11,3 +11,9 @@ jobs:
       - run: make circleci
       - run: make deps
       - run: make build
+      - run:
+          command: |
+            if [[ -n "$CIRCLE_TAG" ]]; then
+              export VERSION="$CIRCLE_TAG"
+            fi
+            make release
