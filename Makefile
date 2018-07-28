@@ -39,6 +39,7 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		--package build/deb/$(NAME)_$(VERSION)_amd64.deb \
 		--url "https://github.com/$(MAINTAINER)/$(REPOSITORY)" \
 		--version $(VERSION) \
+		--verbose \
 		build/linux/$(NAME)=/usr/local/bin/$(NAME)
 
 build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
@@ -55,6 +56,7 @@ build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 		--rpm-os linux \
 		--url "https://github.com/$(MAINTAINER)/$(REPOSITORY)" \
 		--version $(VERSION) \
+		--verbose \
 		build/linux/$(NAME)=/usr/local/bin/$(NAME)
 
 clean:
