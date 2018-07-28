@@ -13,6 +13,6 @@ jobs:
       - run: make build
       - run:
           command: |
-          if [ "${CIRCLE_BRANCH}" == "release" ]; then
-            make release
-          fi
+            if [[ "$CIRCLE_BRANCH" == "release" ]]; then
+              make release
+            fi
