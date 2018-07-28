@@ -42,6 +42,7 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		build/linux/$(NAME)=/usr/local/bin/$(NAME)
 
 build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
+	sudo apt install rpm -y
 	mkdir -p build/rpm && fpm \
 		--architecture x86_64 \
 		--category utils \
