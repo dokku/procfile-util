@@ -8,6 +8,12 @@
   revision = "95911c018170ab2092b96d15985030390b4535af"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/andrew-d/go-termutil"
+  packages = ["."]
+  revision = "009166a695a2f516c749a26b4ac1f183d89aa336"
+
+[[projects]]
   name = "github.com/joho/godotenv"
   packages = ["."]
   revision = "a79fa1e548e2c689c241d10173efd51e5d689d5b"
@@ -16,6 +22,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a121f3b59af5164cdd8147548703c1d86fee870752c86b6ec186a5a547f6e8d3"
+  inputs-digest = "fa803d0b0878c5b19eaced9d34b34fb26c817a9c5d1e3aa2277dfa68b2f5c0a5"
   solver-name = "gps-cdcl"
   solver-version = 1

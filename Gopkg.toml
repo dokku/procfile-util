@@ -25,18 +25,18 @@
 #   unused-packages = true
 
 
-[[constraint]]
-  name = "github.com/joho/godotenv"
-  version = "1.2.0"
-
 [prune]
   go-tests = true
   unused-packages = true
 
 [[constraint]]
-  name = "github.com/urfave/cli"
-  version = "1.20.0"
+  name = "github.com/joho/godotenv"
+  version = "1.2.0"
 
 [[constraint]]
   branch = "master"
   name = "github.com/akamensky/argparse"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/andrew-d/go-termutil"

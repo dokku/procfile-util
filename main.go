@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/akamensky/argparse"
+	"github.com/andrew-d/go-termutil"
 	"github.com/joho/godotenv"
 )
 
@@ -23,25 +24,48 @@ const portEnvVar = "PORT"
 // Version contains the procfile-util version
 var Version string
 
+func getProcfile(path string) (string, error) {
+	if !termutil.Isatty(os.Stdin.Fd()) {
+		bytes, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return "", err
+		}
+		return string(bytes), nil
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	lines := []string{}
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	err = scanner.Err()
+	return strings.Join(lines, "\n"), err
+}
+
 func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	var entries []procfileEntry
 	re, _ := regexp.Compile(`^([A-Za-z0-9_]+)` + delimiter + `\s*(.+)$`)
 
-	f, err := os.Open(path)
+	text, err := getProcfile(path)
 	if err != nil {
 		return entries, err
 	}
-	defer f.Close()
 
 	names := make(map[string]bool)
-
-	scanner := bufio.NewScanner(f)
+	scanner := bufio.NewScanner(strings.NewReader(text))
 	for scanner.Scan() {
-		if len(scanner.Text()) == 0 {
+		line := scanner.Text()
+		if len(line) == 0 {
 			continue
 		}
 
-		params := re.FindStringSubmatch(scanner.Text())
+		params := re.FindStringSubmatch(line)
 		if len(params) != 3 {
 			continue
 		}
