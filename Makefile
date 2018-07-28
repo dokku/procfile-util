@@ -27,7 +27,7 @@ build/linux/$(NAME):
 	mkdir -p build/linux  && CGO_ENABLED=0 GOOS=linux  go build -a -ldflags "-X main.Version=$(VERSION)" -o build/linux/$(NAME)
 
 build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
-	fpm \
+	mkdir -p build/deb && fpm \
 		--architecture amd64 \
 		--category utils \
 		--description "$$DESCRIPTION" \
@@ -42,7 +42,7 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		build/linux/$(NAME)=/usr/local/bin/$(NAME)
 
 build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
-	fpm \
+	mkdir -p build/rpm && fpm \
 		--architecture x86_64 \
 		--category utils \
 		--description "$$DESCRIPTION" \
