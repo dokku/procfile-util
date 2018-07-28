@@ -63,7 +63,7 @@ clean:
 circleci:
 	docker version
 	rm -f ~/.gitconfig
-	sudo apt install ruby ruby-dev rubygems build-essential rpm -y
+	sudo apt install ruby ruby-dev rubygems build-essential rpm -qy
 	sudo gem install --no-ri --no-rdoc --quiet --silent fpm
 
 deps:
