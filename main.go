@@ -20,6 +20,9 @@ type procfileEntry struct {
 const defaultPort = "5000"
 const portEnvVar = "PORT"
 
+// Version contains the procfile-util version
+var Version string
+
 func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	var entries []procfileEntry
 	re, _ := regexp.Compile(`^([A-Za-z0-9_]+)` + delimiter + `\s*(.+)$`)
@@ -209,6 +212,7 @@ func main() {
 	parser := argparse.NewParser("procfile-parser", "A procfile parsing tool")
 	procfileFlag := parser.String("P", "procfile", &argparse.Options{Default: "Procfile", Help: "path to a procfile"})
 	delimiterFlag := parser.String("D", "delimiter", &argparse.Options{Default: ":", Help: "delimiter in use within procfile"})
+	versionFlag := parser.Flag("v", "version", &argparse.Options{Help: "show version"})
 
 	existsCmd := parser.NewCommand("exists", "check if a process type exists")
 	processTypeExistsFlag := existsCmd.String("p", "process-type", &argparse.Options{Help: "name of process to retrieve"})
@@ -231,6 +235,12 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", parser.Usage(err))
 		os.Exit(1)
+		return
+	}
+
+	if *versionFlag {
+		fmt.Printf("procfile-util %v\n", Version)
+		os.Exit(0)
 		return
 	}
 
