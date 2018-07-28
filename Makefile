@@ -1,8 +1,9 @@
 NAME = procfile-util
 MAINTAINER = josegonzalez
+REPOSITORY = go-procfile-util
 HARDWARE = $(shell uname -m)
 VERSION ?= 0.0.1
-IMAGE_NAME ?= $(NAME)
+IMAGE_NAME ?= $(MAINTAINER)/$(NAME)
 BUILD_TAG ?= dev
 
 build:
@@ -34,4 +35,4 @@ release: build
 	rm -rf release && mkdir release
 	tar -zcf release/$(NAME)_$(VERSION)_linux_$(HARDWARE).tgz -C build/linux $(NAME)
 	tar -zcf release/$(NAME)_$(VERSION)_darwin_$(HARDWARE).tgz -C build/darwin $(NAME)
-	gh-release create $(MAINTAINER)/$(NAME) $(VERSION) $(shell git rev-parse --abbrev-ref HEAD)
+	gh-release create $(MAINTAINER)/$(REPOSITORY) $(VERSION) $(shell git rev-parse --abbrev-ref HEAD)
