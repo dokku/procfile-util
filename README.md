@@ -12,6 +12,14 @@ Install it using the "go get" command:
 
 All commands take a `-P` or `--procfile` flag to specify an alternative `Procfile` path. If not specified, `procfile-util` will attempt to read the `Procfile` from the current directory.
 
+### check
+
+> check that the specified procfile is valid
+
+```shell
+procfile-util check
+```
+
 ### exists
 
 > check if a process type exists
