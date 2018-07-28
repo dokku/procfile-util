@@ -5,7 +5,7 @@ MAINTAINER_NAME = Jose Diaz-Gonzalez
 REPOSITORY = go-procfile-util
 HARDWARE = $(shell uname -m)
 VERSION ?= 0.0.2
-IMAGE_NAME ?= $(MAINTAINER)/$(NAME)
+IMAGE_NAME ?= $(MAINTAINER)/$(REPOSITORY)
 BUILD_TAG ?= dev
 define DESCRIPTION
 Utility that allows users to interact with Procfile files
