@@ -1,5 +1,7 @@
 NAME = procfile-util
+EMAIL = procfile-util@josediazgonzalez.com
 MAINTAINER = josegonzalez
+MAINTAINER_NAME = Jose Diaz-Gonzalez
 REPOSITORY = go-procfile-util
 HARDWARE = $(shell uname -m)
 VERSION ?= 0.0.2
@@ -31,7 +33,7 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		--description "$$DESCRIPTION" \
 		--input-type dir \
 		--license 'MIT License' \
-		--maintainer "Jose Diaz-Gonzalez <procfile-util@josediazgonzalez.com>" \
+		--maintainer "$(MAINTAINER_NAME) <$(EMAIL)>" \
 		--name procfile-util \
 		--output-type deb \
 		--package build/deb/$(NAME)_$(VERSION)_amd64.deb \
@@ -46,7 +48,7 @@ build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 		--description "$$DESCRIPTION" \
 		--input-type dir \
 		--license 'MIT License' \
-		--maintainer "Jose Diaz-Gonzalez <procfile-util@josediazgonzalez.com>" \
+		--maintainer "$(MAINTAINER_NAME) <$(EMAIL)>" \
 		--name procfile-util \
 		--output-type rpm \
 		--package build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm \
