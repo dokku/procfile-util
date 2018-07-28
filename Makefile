@@ -20,7 +20,7 @@ build:
 	@$(MAKE) build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm
 
 build-docker-image:
-	docker build -q -f Dockerfile.build -t $(IMAGE_NAME):$(BUILD_TAG) .
+	docker build -q -f Dockerfile.build -t $(IMAGE_NAME):build .
 
 build-in-docker:
 	docker build --rm -f Dockerfile.build -t $(IMAGE_NAME):build .
