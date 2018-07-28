@@ -109,7 +109,7 @@ func existsCommand(entries []procfileEntry, processType string) bool {
 	return false
 }
 
-func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool) bool {
+func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string) bool {
 	hasErrors := false
 	commands := make(map[string]string)
 	for _, entry := range entries {
@@ -127,7 +127,9 @@ func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool) bo
 	}
 
 	for k, v := range commands {
-		fmt.Printf("%v: %v\n", k, v)
+		if processType == "" || processType == k {
+			fmt.Printf("%v: %v\n", k, v)
+		}
 	}
 	return true
 }
@@ -173,6 +175,7 @@ func main() {
 	expandCmd := parser.NewCommand("expand", "expands a procfile against a specific environment")
 	allowGetenvExpandFlag := expandCmd.Flag("a", "allow-getenv", &argparse.Options{Help: "allow the use of the existing env when expanding commands"})
 	envPathExpandFlag := expandCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
+	processTypeExpandFlag := expandCmd.String("p", "process-type", &argparse.Options{Help: "name of process to retrieve"})
 
 	listCmd := parser.NewCommand("list", "list all process types in a procfile")
 
@@ -199,7 +202,7 @@ func main() {
 	if existsCmd.Happened() {
 		success = existsCommand(entries, *processTypeExistsFlag)
 	} else if expandCmd.Happened() {
-		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag)
+		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag)
 	} else if listCmd.Happened() {
 		success = listCommand(entries)
 	} else if showCmd.Happened() {
