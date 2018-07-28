@@ -71,7 +71,7 @@ func expandEnv(s string, envPath string, allowEnv bool) (string, error) {
 	}
 
 	if envPath != "" {
-		b, err := ioutil.ReadFile(envPath) // just pass the file name
+		b, err := ioutil.ReadFile(envPath)
 		if err != nil {
 			return "", err
 		}
