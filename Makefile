@@ -26,7 +26,12 @@ build-in-docker:
 	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
 		-v /var/lib/docker:/var/lib/docker \
 		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
-		-e IMAGE_NAME=$(IMAGE_NAME) -e BUILD_TAG=$(BUILD_TAG) -e VERSION=master \
+		-e IMAGE_NAME=$(IMAGE_NAME) \
+		$(IMAGE_NAME):build ls -lah
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
+		-v /var/lib/docker:/var/lib/docker \
+		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
+		-e IMAGE_NAME=$(IMAGE_NAME) \
 		$(IMAGE_NAME):build make -e deps build
 	# docker rmi $(IMAGE_NAME):build || true
 
