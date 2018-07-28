@@ -98,13 +98,7 @@ func expandEnv(s string, envPath string, allowEnv bool) (string, error) {
 	return os.Expand(s, expandFunc), nil
 }
 
-func existsCommand(procfile string, processType string) bool {
-	entries, err := parseProcfile(procfile)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		return false
-	}
-
+func existsCommand(entries []procfileEntry, processType string) bool {
 	for _, entry := range entries {
 		if processType == entry.Name {
 			return true
@@ -115,13 +109,7 @@ func existsCommand(procfile string, processType string) bool {
 	return false
 }
 
-func expandCommand(procfile string, envPath string, allowGetenv bool) bool {
-	entries, err := parseProcfile(procfile)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		return false
-	}
-
+func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool) bool {
 	hasErrors := false
 	commands := make(map[string]string)
 	for _, entry := range entries {
@@ -144,26 +132,14 @@ func expandCommand(procfile string, envPath string, allowGetenv bool) bool {
 	return true
 }
 
-func listCommand(procfile string) bool {
-	entries, err := parseProcfile(procfile)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		return false
-	}
-
+func listCommand(entries []procfileEntry) bool {
 	for _, entry := range entries {
 		fmt.Printf("%v\n", entry.Name)
 	}
 	return true
 }
 
-func showCommand(procfile string, envPath string, allowGetenv bool, processType string) bool {
-	entries, err := parseProcfile(procfile)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		return false
-	}
-
+func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string) bool {
 	var foundEntry procfileEntry
 	for _, entry := range entries {
 		if processType == entry.Name {
@@ -212,15 +188,22 @@ func main() {
 		return
 	}
 
+	entries, err := parseProcfile(*procfileFlag)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+		return
+	}
+
 	success := false
 	if existsCmd.Happened() {
-		success = existsCommand(*procfileFlag, *processTypeExistsFlag)
+		success = existsCommand(entries, *processTypeExistsFlag)
 	} else if expandCmd.Happened() {
-		success = expandCommand(*procfileFlag, *envPathExpandFlag, *allowGetenvExpandFlag)
+		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag)
 	} else if listCmd.Happened() {
-		success = listCommand(*procfileFlag)
+		success = listCommand(entries)
 	} else if showCmd.Happened() {
-		success = showCommand(*procfileFlag, *envPathShowFlag, *allowGetenvShowFlag, *processTypeShowFlag)
+		success = showCommand(entries, *envPathShowFlag, *allowGetenvShowFlag, *processTypeShowFlag)
 	} else {
 		fmt.Print(parser.Usage(err))
 	}
