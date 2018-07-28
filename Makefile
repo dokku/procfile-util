@@ -83,4 +83,4 @@ release: build
 
 store-artifacts: build
 	mkdir -p /tmp/artifacts
-	cp build/* /tmp/artifacts
+	cp -r build/* /tmp/artifacts
