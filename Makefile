@@ -30,6 +30,7 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 	mkdir -p build/deb && fpm \
 		--architecture amd64 \
 		--category utils \
+		--chdir build/linux \
 		--description "$$DESCRIPTION" \
 		--input-type dir \
 		--license 'MIT License' \
@@ -37,15 +38,17 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		--name procfile-util \
 		--output-type deb \
 		--package build/deb/$(NAME)_$(VERSION)_amd64.deb \
+		--prefix /usr/local/bin \
 		--url "https://github.com/$(MAINTAINER)/$(REPOSITORY)" \
 		--version $(VERSION) \
 		--verbose \
-		build/linux/$(NAME)=/usr/local/bin/$(NAME)
+		$(NAME)
 
 build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 	mkdir -p build/rpm && fpm \
 		--architecture x86_64 \
 		--category utils \
+		--chdir build/linux \
 		--description "$$DESCRIPTION" \
 		--input-type dir \
 		--license 'MIT License' \
@@ -53,11 +56,12 @@ build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 		--name procfile-util \
 		--output-type rpm \
 		--package build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm \
+		--prefix /usr/local/bin \
 		--rpm-os linux \
 		--url "https://github.com/$(MAINTAINER)/$(REPOSITORY)" \
 		--version $(VERSION) \
 		--verbose \
-		build/linux/$(NAME)=/usr/local/bin/$(NAME)
+		$(NAME)
 
 clean:
 	rm -rf build
