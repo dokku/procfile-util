@@ -64,7 +64,7 @@ circleci:
 	docker version
 	rm -f ~/.gitconfig
 	sudo apt install ruby ruby-dev rubygems build-essential rpm -qy
-	sudo gem install --no-ri --no-rdoc --quiet --silent fpm
+	sudo gem install --no-ri --no-rdoc --quiet fpm
 
 deps:
 	go get -u github.com/progrium/gh-release/...
