@@ -65,16 +65,14 @@ build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 
 build-validate:
 	mkdir -p validation
-	ls -lah build/deb
-	ls -lah build/rpm
 	dpkg-deb --info build/deb/$(NAME)_$(VERSION)_amd64.deb
 	dpkg -c build/deb/$(NAME)_$(VERSION)_amd64.deb
 	cd validation && ar -x ../build/deb/$(NAME)_$(VERSION)_amd64.deb
 	cd validation && rpm2cpio ../build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm > $(NAME)-$(VERSION)-1.x86_64.cpio
-	ls -lah validation
+	ls -lah build/deb build/rpm validation
 
 clean:
-	rm -rf build control.tar.gz data.tar.gz debian-binary release validation
+	rm -rf build release validation
 
 circleci:
 	docker version
