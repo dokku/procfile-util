@@ -13,7 +13,6 @@ jobs:
       - run: make build
       - run:
           command: |
-            if [[ -n "$CIRCLE_TAG" ]]; then
-              export VERSION="$CIRCLE_TAG"
-            fi
+          if [ "${CIRCLE_BRANCH}" == "release" ]; then
             make release
+          fi

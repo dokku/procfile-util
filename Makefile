@@ -30,15 +30,7 @@ deps:
 docker-image:
 	docker build -q -f Dockerfile.build -t $(IMAGE_NAME):$(BUILD_TAG) .
 
-ifdef CIRCLE_TAG
-release: make-release
-else
-release:
-	@echo "No release necessary"
-endif
-
-
-make-release: build
+release: build
 	rm -rf release && mkdir release
 	tar -zcf release/$(NAME)_$(VERSION)_linux_$(HARDWARE).tgz -C build/linux $(NAME)
 	tar -zcf release/$(NAME)_$(VERSION)_darwin_$(HARDWARE).tgz -C build/darwin $(NAME)
