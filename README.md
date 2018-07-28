@@ -1,4 +1,4 @@
-# go-procfile-util
+# go-procfile-util [![CircleCI](https://circleci.com/gh/josegonzalez/go-procfile-util.svg?style=svg)](https://circleci.com/gh/josegonzalez/go-procfile-util)
 
 A tool for interacting with Procfiles.
 
