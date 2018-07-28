@@ -42,7 +42,6 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		build/linux/$(NAME)=/usr/local/bin/$(NAME)
 
 build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
-	sudo apt install rpm -y
 	mkdir -p build/rpm && fpm \
 		--architecture x86_64 \
 		--category utils \
@@ -64,7 +63,7 @@ clean:
 circleci:
 	docker version
 	rm -f ~/.gitconfig
-	sudo apt install ruby ruby-dev rubygems build-essential -y
+	sudo apt install ruby ruby-dev rubygems build-essential rpm -y
 	sudo gem install --no-ri --no-rdoc fpm
 
 deps:
