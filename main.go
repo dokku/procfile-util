@@ -17,9 +17,9 @@ type procfileEntry struct {
 	Command string
 }
 
-func parseProcfile(path string) ([]procfileEntry, error) {
+func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	var entries []procfileEntry
-	re, _ := regexp.Compile(`^([A-Za-z0-9_]+):\s*(.+)$`)
+	re, _ := regexp.Compile(`^([A-Za-z0-9_]+)` + delimiter + `\s*(.+)$`)
 
 	f, err := os.Open(path)
 	if err != nil {
@@ -168,6 +168,7 @@ func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, proc
 func main() {
 	parser := argparse.NewParser("procfile-parser", "A procfile parsing tool")
 	procfileFlag := parser.String("P", "procfile", &argparse.Options{Default: "Procfile", Help: "path to a procfile"})
+	delimiterFlag := parser.String("D", "delimiter", &argparse.Options{Default: ":", Help: "delimiter in use within procfile"})
 
 	existsCmd := parser.NewCommand("exists", "check if a process type exists")
 	processTypeExistsFlag := existsCmd.String("p", "process-type", &argparse.Options{Help: "name of process to retrieve"})
@@ -191,7 +192,7 @@ func main() {
 		return
 	}
 
-	entries, err := parseProcfile(*procfileFlag)
+	entries, err := parseProcfile(*procfileFlag, *delimiterFlag)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
