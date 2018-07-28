@@ -20,10 +20,9 @@ build:
 	@$(MAKE) build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm
 
 build-docker-image:
-	docker build -q -f Dockerfile.build -t $(IMAGE_NAME):build .
+	docker build --rm -q -f Dockerfile.build -t $(IMAGE_NAME):build .
 
 build-in-docker:
-	docker build --rm -f Dockerfile.build -t $(IMAGE_NAME):build .
 	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
 		-v /var/lib/docker:/var/lib/docker \
 		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
