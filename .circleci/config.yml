@@ -14,6 +14,7 @@ jobs:
       - run: make store-artifacts
       - store_artifacts:
           path: /tmp/artifacts
+          destination: build
       - run:
           command: |
             if [[ "$CIRCLE_BRANCH" == "release" ]]; then
