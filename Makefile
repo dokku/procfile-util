@@ -19,7 +19,6 @@ build:
 	@$(MAKE) build/deb/$(NAME)_$(VERSION)_amd64.deb
 	@$(MAKE) build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm
 	@$(MAKE) docker-image
-	@$(MAKE) build-validate
 
 build/darwin/$(NAME):
 	mkdir -p build/darwin && CGO_ENABLED=0 GOOS=darwin go build -a -ldflags "-X main.Version=$(VERSION)" -o build/darwin/$(NAME)
@@ -44,9 +43,6 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		--version $(VERSION) \
 		--verbose \
 		$(NAME)
-	dpkg-deb --info build/deb/$(NAME)_$(VERSION)_amd64.deb
-	dpkg -c build/deb/$(NAME)_$(VERSION)_amd64.deb
-	ar -x build/deb/$(NAME)_$(VERSION)_amd64.deb
 
 build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 	mkdir -p build/rpm && fpm \
@@ -68,12 +64,17 @@ build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 		$(NAME)
 
 build-validate:
+	mkdir -p validation
+	ls -lah build/deb
+	ls -lah build/rpm
 	dpkg-deb --info build/deb/$(NAME)_$(VERSION)_amd64.deb
 	dpkg -c build/deb/$(NAME)_$(VERSION)_amd64.deb
-	ar -x build/deb/$(NAME)_$(VERSION)_amd64.deb
+	cd validation && ar -x ../build/deb/$(NAME)_$(VERSION)_amd64.deb
+	cd validation && rpm2cpio ../build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm > $(NAME)-$(VERSION)-1.x86_64.cpio
+	ls -lah validation
 
 clean:
-	rm -rf build
+	rm -rf build control.tar.gz data.tar.gz debian-binary release validation
 
 circleci:
 	docker version
