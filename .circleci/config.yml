@@ -12,6 +12,7 @@ jobs:
       - run: make deps
       - run: make build
       - run: make store-artifacts
+      - run: make build-validate
       - store_artifacts:
           path: /tmp/artifacts
           destination: build

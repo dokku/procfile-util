@@ -19,6 +19,7 @@ build:
 	@$(MAKE) build/deb/$(NAME)_$(VERSION)_amd64.deb
 	@$(MAKE) build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm
 	@$(MAKE) docker-image
+	@$(MAKE) build-validate
 
 build/darwin/$(NAME):
 	mkdir -p build/darwin && CGO_ENABLED=0 GOOS=darwin go build -a -ldflags "-X main.Version=$(VERSION)" -o build/darwin/$(NAME)
@@ -65,6 +66,11 @@ build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 		--version $(VERSION) \
 		--verbose \
 		$(NAME)
+
+build-validate:
+	dpkg-deb --info build/deb/$(NAME)_$(VERSION)_amd64.deb
+	dpkg -c build/deb/$(NAME)_$(VERSION)_amd64.deb
+	ar -x build/deb/$(NAME)_$(VERSION)_amd64.deb
 
 clean:
 	rm -rf build
