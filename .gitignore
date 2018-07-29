@@ -16,3 +16,9 @@ build/*
 
 # Release output
 release/*
+
+# Validation output
+validation/*
+
+# .env files
+.env*
