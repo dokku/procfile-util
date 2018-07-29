@@ -17,4 +17,7 @@ jobs:
           command: |
             if [[ "$CIRCLE_BRANCH" == "release" ]]; then
               make release-in-docker
+              PACKAGECLOUD_REPOSITORY=dokku/dokku make release-packagecloud-in-docker
+            else
+              make release-packagecloud-in-docker
             fi

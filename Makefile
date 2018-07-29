@@ -6,6 +6,7 @@ REPOSITORY = go-procfile-util
 HARDWARE = $(shell uname -m)
 VERSION ?= 0.0.2
 IMAGE_NAME ?= $(MAINTAINER)/$(REPOSITORY)
+PACKAGECLOUD_REPOSITORY ?= dokku/dokku-betafish
 
 define PACKAGE_DESCRIPTION
 Utility that allows users to interact with Procfile files
@@ -37,6 +38,13 @@ release-in-docker:
 		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
 		-e IMAGE_NAME=$(IMAGE_NAME) \
 		$(IMAGE_NAME):build make -e release
+
+release-packagecloud-in-docker:
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
+		-v /var/lib/docker:/var/lib/docker \
+		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
+		-e IMAGE_NAME=$(IMAGE_NAME) \
+		$(IMAGE_NAME):build make -e release-packagecloud
 
 validate-in-docker:
 	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
@@ -119,6 +127,28 @@ release: build
 	cp build/deb/$(NAME)_$(VERSION)_amd64.deb release/$(NAME)_$(VERSION)_amd64.deb
 	cp build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm release/$(NAME)-$(VERSION)-1.x86_64.rpm
 	gh-release create $(MAINTAINER)/$(REPOSITORY) $(VERSION) $(shell git rev-parse --abbrev-ref HEAD)
+
+release-packagecloud:
+	@$(MAKE) release-packagecloud-deb
+	@$(MAKE) release-packagecloud-rpm
+
+release-packagecloud-deb: build/deb/$(NAME)_$(VERSION)_amd64.deb
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/ubuntu/trusty  build/deb/$(NAME)_$(VERSION)_amd64.deb
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/ubuntu/utopic  build/deb/$(NAME)_$(VERSION)_amd64.deb
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/ubuntu/vivid   build/deb/$(NAME)_$(VERSION)_amd64.deb
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/ubuntu/wily    build/deb/$(NAME)_$(VERSION)_amd64.deb
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/ubuntu/xenial  build/deb/$(NAME)_$(VERSION)_amd64.deb
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/ubuntu/yakkety build/deb/$(NAME)_$(VERSION)_amd64.deb
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/ubuntu/zesty   build/deb/$(NAME)_$(VERSION)_amd64.deb
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/ubuntu/artful  build/deb/$(NAME)_$(VERSION)_amd64.deb
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/ubuntu/bionic  build/deb/$(NAME)_$(VERSION)_amd64.deb
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/debian/wheezy  build/deb/$(NAME)_$(VERSION)_amd64.deb
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/debian/jessie  build/deb/$(NAME)_$(VERSION)_amd64.deb
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/debian/stretch build/deb/$(NAME)_$(VERSION)_amd64.deb
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/debian/buster  build/deb/$(NAME)_$(VERSION)_amd64.deb
+
+release-packagecloud-rpm: build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm
+	package_cloud push $(PACKAGECLOUD_REPOSITORY)/el/7           build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm
 
 store-artifacts: build
 	mkdir -p /tmp/artifacts
