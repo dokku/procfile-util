@@ -14,7 +14,7 @@ else
 	VERSION = $(shell echo "${BASE_VERSION}")build+$(shell git rev-parse --short HEAD)
 endif
 
-derp:
+version:
 	@echo "$(VERSION)"
 
 define PACKAGE_DESCRIPTION
