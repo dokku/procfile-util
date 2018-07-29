@@ -7,11 +7,13 @@ HARDWARE = $(shell uname -m)
 VERSION ?= 0.0.2
 IMAGE_NAME ?= $(MAINTAINER)/$(REPOSITORY)
 BUILD_TAG ?= dev
-define DESCRIPTION
+define PACKAGE_DESCRIPTION
 Utility that allows users to interact with Procfile files
 Procfiles may be specified on stdin or via a flag, but
 must always be valid yaml.
 endef
+
+export PACKAGE_DESCRIPTION
 
 build:
 	@$(MAKE) build/darwin/$(NAME)
@@ -56,7 +58,7 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		--architecture amd64 \
 		--category utils \
 		--chdir build/linux \
-		--description "$$DESCRIPTION" \
+		--description "$$PACKAGE_DESCRIPTION" \
 		--input-type dir \
 		--license 'MIT License' \
 		--maintainer "$(MAINTAINER_NAME) <$(EMAIL)>" \
@@ -77,7 +79,7 @@ build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 		--architecture x86_64 \
 		--category utils \
 		--chdir build/linux \
-		--description "$$DESCRIPTION" \
+		--description "$$PACKAGE_DESCRIPTION" \
 		--input-type dir \
 		--license 'MIT License' \
 		--maintainer "$(MAINTAINER_NAME) <$(EMAIL)>" \
