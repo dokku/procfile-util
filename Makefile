@@ -23,18 +23,18 @@ build-docker-image:
 	docker build --rm -q -f Dockerfile.build -t $(IMAGE_NAME):build .
 
 build-in-docker:
-	ls -lah ${PWD}
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
-		-v /var/lib/docker:/var/lib/docker \
-		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
-		-e IMAGE_NAME=$(IMAGE_NAME) \
-		$(IMAGE_NAME):build ls -lah /go/src/github.com/$(MAINTAINER)/$(REPOSITORY)
 	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
 		-v /var/lib/docker:/var/lib/docker \
 		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
 		-e IMAGE_NAME=$(IMAGE_NAME) \
 		$(IMAGE_NAME):build make -e deps build
-	# docker rmi $(IMAGE_NAME):build || true
+
+validate-in-docker:
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
+		-v /var/lib/docker:/var/lib/docker \
+		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
+		-e IMAGE_NAME=$(IMAGE_NAME) \
+		$(IMAGE_NAME):build make -e validate
 
 build/darwin/$(NAME):
 	mkdir -p build/darwin && CGO_ENABLED=0 GOOS=darwin go build -a -ldflags "-X main.Version=$(VERSION)" -o build/darwin/$(NAME)
@@ -81,14 +81,6 @@ build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 		--verbose \
 		$(NAME)
 
-build-validate:
-	mkdir -p validation
-	dpkg-deb --info build/deb/$(NAME)_$(VERSION)_amd64.deb
-	dpkg -c build/deb/$(NAME)_$(VERSION)_amd64.deb
-	cd validation && ar -x ../build/deb/$(NAME)_$(VERSION)_amd64.deb
-	cd validation && rpm2cpio ../build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm > $(NAME)-$(VERSION)-1.x86_64.cpio
-	ls -lah build/deb build/rpm validation
-
 clean:
 	rm -rf build release validation
 
@@ -111,3 +103,11 @@ release: build
 store-artifacts: build
 	mkdir -p /tmp/artifacts
 	cp -r build/* /tmp/artifacts
+
+validate:
+	mkdir -p validation
+	dpkg-deb --info build/deb/$(NAME)_$(VERSION)_amd64.deb
+	dpkg -c build/deb/$(NAME)_$(VERSION)_amd64.deb
+	cd validation && ar -x ../build/deb/$(NAME)_$(VERSION)_amd64.deb
+	cd validation && rpm2cpio ../build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm > $(NAME)-$(VERSION)-1.x86_64.cpio
+	ls -lah build/deb build/rpm validation

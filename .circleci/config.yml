@@ -9,7 +9,7 @@ jobs:
       - run: make build-docker-image
       - run: make build-in-docker
       - run: make store-artifacts
-      - run: make build-validate
+      - run: make validate-in-docker
       - store_artifacts:
           path: /tmp/artifacts
           destination: build
