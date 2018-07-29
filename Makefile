@@ -50,7 +50,9 @@ build/linux/$(NAME):
 	mkdir -p build/linux  && CGO_ENABLED=0 GOOS=linux  go build -a -ldflags "-X main.Version=$(VERSION)" -o build/linux/$(NAME)
 
 build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
-	mkdir -p build/deb && fpm \
+	export SOURCE_DATE_EPOCH=$(shell git log -1 --format=%ct) \
+		&& mkdir -p build/deb \
+		&& fpm \
 		--architecture amd64 \
 		--category utils \
 		--chdir build/linux \
@@ -69,7 +71,9 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		$(NAME)
 
 build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
-	mkdir -p build/rpm && fpm \
+	export SOURCE_DATE_EPOCH=$(shell git log -1 --format=%ct) \
+		&& mkdir -p build/rpm \
+		&& fpm \
 		--architecture x86_64 \
 		--category utils \
 		--chdir build/linux \
