@@ -23,7 +23,7 @@ targets = $(addsuffix -in-docker, $(LIST))
 	@rm -f .env.docker
 	@touch .env.docker
 	@echo "IMAGE_NAME=$(IMAGE_NAME)" >> .env.docker
-	@echo "PACKAGECLOUD_API_TOKEN=$(PACKAGECLOUD_API_TOKEN)" >> .env.docker
+	@echo "PACKAGECLOUD_TOKEN=$(PACKAGECLOUD_API_TOKEN)" >> .env.docker
 
 build:
 	@$(MAKE) deps
