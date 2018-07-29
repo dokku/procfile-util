@@ -57,7 +57,6 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		&& fpm \
 		--architecture amd64 \
 		--category utils \
-		--chdir build/linux \
 		--description "$$PACKAGE_DESCRIPTION" \
 		--input-type dir \
 		--license 'MIT License' \
@@ -65,12 +64,12 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		--name procfile-util \
 		--output-type deb \
 		--package build/deb/$(NAME)_$(VERSION)_amd64.deb \
-		--prefix /usr/local/bin \
 		--url "https://github.com/$(MAINTAINER)/$(REPOSITORY)" \
 		--vendor "" \
 		--version $(VERSION) \
 		--verbose \
-		$(NAME)
+		build/linux/$(NAME)=/usr/bin/$(NAME) \
+		LICENSE=/usr/share/doc/$(NAME)/copyright
 
 build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 	export SOURCE_DATE_EPOCH=$(shell git log -1 --format=%ct) \
@@ -78,7 +77,6 @@ build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 		&& fpm \
 		--architecture x86_64 \
 		--category utils \
-		--chdir build/linux \
 		--description "$$PACKAGE_DESCRIPTION" \
 		--input-type dir \
 		--license 'MIT License' \
@@ -86,13 +84,13 @@ build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 		--name procfile-util \
 		--output-type rpm \
 		--package build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm \
-		--prefix /usr/local/bin \
 		--rpm-os linux \
 		--url "https://github.com/$(MAINTAINER)/$(REPOSITORY)" \
 		--vendor "" \
 		--version $(VERSION) \
 		--verbose \
-		$(NAME)
+		build/linux/$(NAME)=/usr/bin/$(NAME) \
+		LICENSE=/usr/share/doc/$(NAME)/copyright
 
 clean:
 	rm -rf build release validation
