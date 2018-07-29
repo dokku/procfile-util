@@ -23,11 +23,13 @@ build-docker-image:
 	docker build --rm -q -f Dockerfile.build -t $(IMAGE_NAME):build .
 
 build-in-docker:
+	ls -lah /go/src/github.com/$(MAINTAINER)/$(REPOSITORY)
+	ls -lah ${PWD}
 	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
 		-v /var/lib/docker:/var/lib/docker \
 		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
 		-e IMAGE_NAME=$(IMAGE_NAME) \
-		$(IMAGE_NAME):build ls -lah
+		$(IMAGE_NAME):build ls -lah /go/src/github.com/$(MAINTAINER)/$(REPOSITORY)
 	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
 		-v /var/lib/docker:/var/lib/docker \
 		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
