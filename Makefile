@@ -16,6 +16,9 @@ endef
 
 export PACKAGE_DESCRIPTION
 
+LIST = build release release-packagecloud validate
+targets = $(addsuffix -in-docker, $(LIST))
+
 .env.docker:
 	@rm -f .env.docker
 	@touch .env.docker
@@ -31,33 +34,15 @@ build: deps
 build-docker-image:
 	docker build --rm -q -f Dockerfile.build -t $(IMAGE_NAME):build .
 
-build-in-docker:
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
-		-v /var/lib/docker:/var/lib/docker \
-		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
-		-e IMAGE_NAME=$(IMAGE_NAME) \
-		$(IMAGE_NAME):build make -e deps build
-
-release-in-docker:
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
-		-v /var/lib/docker:/var/lib/docker \
-		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
-		-e IMAGE_NAME=$(IMAGE_NAME) \
-		$(IMAGE_NAME):build make -e release
-
-release-packagecloud-in-docker:
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
-		-v /var/lib/docker:/var/lib/docker \
-		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
-		-e IMAGE_NAME=$(IMAGE_NAME) \
-		$(IMAGE_NAME):build make -e release-packagecloud
-
-validate-in-docker:
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
-		-v /var/lib/docker:/var/lib/docker \
-		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
-		-e IMAGE_NAME=$(IMAGE_NAME) \
-		$(IMAGE_NAME):build make -e validate
+$(targets): %-in-docker: .env.docker
+	docker run \
+		--env-file .env.docker \
+		--rm \
+		--volume /var/lib/docker:/var/lib/docker \
+		--volume /var/run/docker.sock:/var/run/docker.sock:ro \
+		--volume ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
+		--workdir /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
+		$(IMAGE_NAME):build make -e $(@:-in-docker=)
 
 build/darwin/$(NAME):
 	mkdir -p build/darwin
