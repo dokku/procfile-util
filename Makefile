@@ -16,7 +16,7 @@ endef
 
 export PACKAGE_DESCRIPTION
 
-build:
+build: deps
 	@$(MAKE) build/darwin/$(NAME)
 	@$(MAKE) build/linux/$(NAME)
 	@$(MAKE) build/deb/$(NAME)_$(VERSION)_amd64.deb
