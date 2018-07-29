@@ -7,8 +7,14 @@ jobs:
       - checkout
       - run: make circleci
       - run: make build-docker-image
-      - run: make build-in-docker
-      - run: make store-artifacts
+      - run:
+          command: |
+            make build-in-docker
+            ls -lah
+      - run:
+          command: |
+            ls -lah
+            make store-artifacts
       - run: make validate-in-docker
       - store_artifacts:
           path: /tmp/artifacts
