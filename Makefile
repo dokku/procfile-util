@@ -29,6 +29,13 @@ build-in-docker:
 		-e IMAGE_NAME=$(IMAGE_NAME) \
 		$(IMAGE_NAME):build make -e deps build
 
+release-in-docker:
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
+		-v /var/lib/docker:/var/lib/docker \
+		-v ${PWD}:/go/src/github.com/$(MAINTAINER)/$(REPOSITORY) -w /go/src/github.com/$(MAINTAINER)/$(REPOSITORY) \
+		-e IMAGE_NAME=$(IMAGE_NAME) \
+		$(IMAGE_NAME):build make -e release
+
 validate-in-docker:
 	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
 		-v /var/lib/docker:/var/lib/docker \

@@ -16,5 +16,5 @@ jobs:
       - run:
           command: |
             if [[ "$CIRCLE_BRANCH" == "release" ]]; then
-              make release
+              make release-in-docker
             fi
