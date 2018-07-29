@@ -106,13 +106,13 @@ circleci:
 	rm -f ~/.gitconfig
 
 deps:
-	go get -u github.com/progrium/gh-release/...
 	dep ensure -vendor-only
 
 docker-image:
 	docker build --rm -q -f Dockerfile.hub -t $(IMAGE_NAME):$(VERSION) .
 
 release: build
+	go get -u github.com/progrium/gh-release/...
 	rm -rf release && mkdir release
 	tar -zcf release/$(NAME)_$(VERSION)_linux_$(HARDWARE).tgz -C build/linux $(NAME)
 	tar -zcf release/$(NAME)_$(VERSION)_darwin_$(HARDWARE).tgz -C build/darwin $(NAME)
