@@ -41,6 +41,9 @@ procfile-util exists -p non-existent
 # will result in empty string for variable replacements
 procfile-util expand
 
+# specify a default-port to use (default: 5000)
+procfile-util expand --default-port 3000
+
 # expand variables with getenv used for variable expansion
 # may use any variable available when executing procfile-util
 procfile-util expand --allow-getenv
@@ -50,6 +53,9 @@ procfile-util expand --env-file .env
 
 # combines getenv and .env file parsing to provide variable expansion
 procfile-util expand --allow-getenv --env-file .env
+
+# specify the default-port when performing variable expansion
+procfile-util expand --allow-getenv --env-file .env --default-port 3000
 ```
 ### list
 
@@ -68,6 +74,10 @@ procfile-util list
 procfile-util show -p web
 
 # shows the command for the web process
+# specify a default-port to use (default: 5000)
+procfile-util show -p web --default-port 3000
+
+# shows the command for the web process
 # expand variables with getenv used for variable expansion
 # may use any variable available when executing procfile-util
 procfile-util show -p web --allow-getenv
@@ -79,4 +89,8 @@ procfile-util show -p web --env-file .env
 # shows the command for the web process
 # combines getenv and .env file parsing to provide variable expansion
 procfile-util show -p web --allow-getenv --env-file .env
+
+# shows the command for the web process
+# specify the default-port when performing variable expansion
+procfile-util show web --allow-getenv --env-file .env --default-port 3000
 ```
