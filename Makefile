@@ -4,7 +4,7 @@ MAINTAINER = josegonzalez
 MAINTAINER_NAME = Jose Diaz-Gonzalez
 REPOSITORY = go-procfile-util
 HARDWARE = $(shell uname -m)
-BASE_VERSION ?= 0.1.1
+BASE_VERSION ?= 0.1.2
 IMAGE_NAME ?= $(MAINTAINER)/$(REPOSITORY)
 PACKAGECLOUD_REPOSITORY ?= dokku/dokku-betafish
 
