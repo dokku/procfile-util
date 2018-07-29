@@ -118,3 +118,5 @@ validate:
 	cd validation && ar -x ../build/deb/$(NAME)_$(VERSION)_amd64.deb
 	cd validation && rpm2cpio ../build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm > $(NAME)-$(VERSION)-1.x86_64.cpio
 	ls -lah build/deb build/rpm validation
+	sha1sum build/deb/$(NAME)_$(VERSION)_amd64.deb
+	sha1sum build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm
