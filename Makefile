@@ -35,6 +35,7 @@ targets = $(addsuffix -in-docker, $(LIST))
 	@echo "CIRCLE_BRANCH=$(CIRCLE_BRANCH)" >> .env.docker
 	@echo "GITHUB_ACCESS_TOKEN=$(GITHUB_ACCESS_TOKEN)" >> .env.docker
 	@echo "IMAGE_NAME=$(IMAGE_NAME)" >> .env.docker
+	@echo "PACKAGECLOUD_REPOSITORY=$(PACKAGECLOUD_REPOSITORY)" >> .env.docker
 	@echo "PACKAGECLOUD_TOKEN=$(PACKAGECLOUD_API_TOKEN)" >> .env.docker
 	@echo "VERSION=$(VERSION)" >> .env.docker
 
