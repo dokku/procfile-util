@@ -25,7 +25,8 @@ targets = $(addsuffix -in-docker, $(LIST))
 	@echo "IMAGE_NAME=$(IMAGE_NAME)" >> .env.docker
 	@echo "PACKAGECLOUD_API_TOKEN=$(PACKAGECLOUD_API_TOKEN)" >> .env.docker
 
-build: deps
+build:
+	@$(MAKE) deps
 	@$(MAKE) build/darwin/$(NAME)
 	@$(MAKE) build/linux/$(NAME)
 	@$(MAKE) build/deb/$(NAME)_$(VERSION)_amd64.deb
