@@ -8,13 +8,14 @@ BASE_VERSION ?= 0.1.0
 IMAGE_NAME ?= $(MAINTAINER)/$(REPOSITORY)
 PACKAGECLOUD_REPOSITORY ?= dokku/dokku-betafish
 
-ifneq ($(CIRCLE_BRANCH),release)
-	VERSION = $(shell echo "${BASE_VERSION}")build+$(shell git rev-parse --short HEAD)
-else
+ifeq ($(CIRCLE_BRANCH),release)
 	VERSION ?= $(BASE_VERSION)
+else
+	VERSION = $(shell echo "${BASE_VERSION}")build+$(shell git rev-parse --short HEAD)
 endif
 
-derp:
+version:
+	@echo "$(CIRCLE_BRANCH)"
 	@echo "$(VERSION)"
 
 define PACKAGE_DESCRIPTION
