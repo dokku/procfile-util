@@ -1,0 +1,3 @@
+FROM scratch
+COPY ./build/linux/procfile-util /procfile-util
+ENTRYPOINT ["/procfile-util"]

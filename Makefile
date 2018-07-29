@@ -6,7 +6,7 @@ REPOSITORY = go-procfile-util
 HARDWARE = $(shell uname -m)
 VERSION ?= 0.0.2
 IMAGE_NAME ?= $(MAINTAINER)/$(REPOSITORY)
-BUILD_TAG ?= dev
+
 define PACKAGE_DESCRIPTION
 Utility that allows users to interact with Procfile files
 Procfiles may be specified on stdin or via a flag, but
@@ -108,6 +108,9 @@ circleci:
 deps:
 	go get -u github.com/progrium/gh-release/...
 	dep ensure -vendor-only
+
+docker-image:
+	docker build --rm -q -f Dockerfile.hub -t $(IMAGE_NAME):$(VERSION) .
 
 release: build
 	rm -rf release && mkdir release
