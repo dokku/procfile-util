@@ -1,13 +1,11 @@
 version: 2
 jobs:
   build:
-    docker:
-      - image: circleci/golang:1.10.3
+    machine:
+      docker_layer_caching: true
     working_directory: /go/src/github.com/josegonzalez/go-procfile-util
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching:
       - run: make circleci
       - run: make build-docker-image
       - run: make build-in-docker
