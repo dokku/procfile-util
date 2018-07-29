@@ -117,6 +117,7 @@ store-artifacts: build
 
 validate:
 	mkdir -p validation
+	lintian build/deb/$(NAME)_$(VERSION)_amd64.deb || true
 	dpkg-deb --info build/deb/$(NAME)_$(VERSION)_amd64.deb
 	dpkg -c build/deb/$(NAME)_$(VERSION)_amd64.deb
 	cd validation && ar -x ../build/deb/$(NAME)_$(VERSION)_amd64.deb
