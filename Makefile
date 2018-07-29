@@ -16,6 +16,12 @@ endef
 
 export PACKAGE_DESCRIPTION
 
+.env.docker:
+	@rm -f .env.docker
+	@touch .env.docker
+	@echo "IMAGE_NAME=$(IMAGE_NAME)" >> .env.docker
+	@echo "PACKAGECLOUD_API_TOKEN=$(PACKAGECLOUD_API_TOKEN)" >> .env.docker
+
 build: deps
 	@$(MAKE) build/darwin/$(NAME)
 	@$(MAKE) build/linux/$(NAME)
