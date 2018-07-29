@@ -4,14 +4,16 @@ MAINTAINER = josegonzalez
 MAINTAINER_NAME = Jose Diaz-Gonzalez
 REPOSITORY = go-procfile-util
 HARDWARE = $(shell uname -m)
-BASE_VERSION ?= 0.1.2
+BASE_VERSION ?= 0.2.0
 IMAGE_NAME ?= $(MAINTAINER)/$(REPOSITORY)
 PACKAGECLOUD_REPOSITORY ?= dokku/dokku-betafish
 
 ifeq ($(CIRCLE_BRANCH),release)
 	VERSION ?= $(BASE_VERSION)
+	DOCKER_VERSION = $(VERSION)
 else
 	VERSION = $(shell echo "${BASE_VERSION}")build+$(shell git rev-parse --short HEAD)
+	DOCKER_VERSION = $(shell echo "${BASE_VERSION}")build-$(shell git rev-parse --short HEAD)
 endif
 
 version:
@@ -123,7 +125,7 @@ deps:
 	dep ensure -vendor-only
 
 docker-image:
-	docker build --rm -q -f Dockerfile.hub -t $(IMAGE_NAME):$(VERSION) .
+	docker build --rm -q -f Dockerfile.hub -t $(IMAGE_NAME):$(DOCKER_VERSION) .
 
 release: build
 	go get -u github.com/progrium/gh-release/...

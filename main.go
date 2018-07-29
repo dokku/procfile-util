@@ -18,7 +18,6 @@ type procfileEntry struct {
 	Command string
 }
 
-const defaultPort = "5000"
 const portEnvVar = "PORT"
 
 // Version contains the procfile-util version
@@ -91,7 +90,7 @@ func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	return entries, nil
 }
 
-func expandEnv(e procfileEntry, envPath string, allowEnv bool) (string, error) {
+func expandEnv(e procfileEntry, envPath string, allowEnv bool, defaultPort string) (string, error) {
 	baseExpandFunc := func(key string) string {
 		if key == "PS" {
 			return os.Getenv("PS")
@@ -176,11 +175,11 @@ func existsCommand(entries []procfileEntry, processType string) bool {
 	return false
 }
 
-func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string) bool {
+func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort string) bool {
 	hasErrors := false
 	commands := make(map[string]string)
 	for _, entry := range entries {
-		command, err := expandEnv(entry, envPath, allowGetenv)
+		command, err := expandEnv(entry, envPath, allowGetenv, defaultPort)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error processing command: %s\n", err)
 			hasErrors = true
@@ -208,7 +207,7 @@ func listCommand(entries []procfileEntry) bool {
 	return true
 }
 
-func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string) bool {
+func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort string) bool {
 	var foundEntry procfileEntry
 	for _, entry := range entries {
 		if processType == entry.Name {
@@ -222,7 +221,7 @@ func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, proc
 		return false
 	}
 
-	command, err := expandEnv(foundEntry, envPath, allowGetenv)
+	command, err := expandEnv(foundEntry, envPath, allowGetenv, defaultPort)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error processing command: %s\n", err)
 		return false
@@ -237,6 +236,7 @@ func main() {
 	procfileFlag := parser.String("P", "procfile", &argparse.Options{Default: "Procfile", Help: "path to a procfile"})
 	delimiterFlag := parser.String("D", "delimiter", &argparse.Options{Default: ":", Help: "delimiter in use within procfile"})
 	versionFlag := parser.Flag("v", "version", &argparse.Options{Help: "show version"})
+	defaultPortFlag := parser.String("d", "default-port", &argparse.Options{Default: "5000", Help: "default port to use"})
 
 	existsCmd := parser.NewCommand("exists", "check if a process type exists")
 	processTypeExistsFlag := existsCmd.String("p", "process-type", &argparse.Options{Help: "name of process to retrieve"})
@@ -281,11 +281,11 @@ func main() {
 	} else if existsCmd.Happened() {
 		success = existsCommand(entries, *processTypeExistsFlag)
 	} else if expandCmd.Happened() {
-		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag)
+		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag, *defaultPortFlag)
 	} else if listCmd.Happened() {
 		success = listCommand(entries)
 	} else if showCmd.Happened() {
-		success = showCommand(entries, *envPathShowFlag, *allowGetenvShowFlag, *processTypeShowFlag)
+		success = showCommand(entries, *envPathShowFlag, *allowGetenvShowFlag, *processTypeShowFlag, *defaultPortFlag)
 	} else {
 		fmt.Print(parser.Usage(err))
 	}
