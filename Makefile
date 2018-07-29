@@ -4,9 +4,18 @@ MAINTAINER = josegonzalez
 MAINTAINER_NAME = Jose Diaz-Gonzalez
 REPOSITORY = go-procfile-util
 HARDWARE = $(shell uname -m)
-VERSION ?= 0.0.3
+BASE_VERSION ?= 0.1.0
 IMAGE_NAME ?= $(MAINTAINER)/$(REPOSITORY)
 PACKAGECLOUD_REPOSITORY ?= dokku/dokku-betafish
+
+ifneq ($(CIRCLE_BRANCH),release)
+	VERSION = $(shell echo "${BASE_VERSION}")build+$(shell git rev-parse --short HEAD)
+else
+	VERSION ?= $(BASE_VERSION)
+endif
+
+derp:
+	@echo "$(VERSION)"
 
 define PACKAGE_DESCRIPTION
 Utility that allows users to interact with Procfile files
@@ -106,13 +115,13 @@ circleci:
 	rm -f ~/.gitconfig
 
 deps:
-	go get -u github.com/progrium/gh-release/...
 	dep ensure -vendor-only
 
 docker-image:
 	docker build --rm -q -f Dockerfile.hub -t $(IMAGE_NAME):$(VERSION) .
 
 release: build
+	go get -u github.com/progrium/gh-release/...
 	rm -rf release && mkdir release
 	tar -zcf release/$(NAME)_$(VERSION)_linux_$(HARDWARE).tgz -C build/linux $(NAME)
 	tar -zcf release/$(NAME)_$(VERSION)_darwin_$(HARDWARE).tgz -C build/darwin $(NAME)
