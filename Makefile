@@ -15,6 +15,7 @@ else
 endif
 
 version:
+	@echo "$(CIRCLE_BRANCH)"
 	@echo "$(VERSION)"
 
 define PACKAGE_DESCRIPTION
