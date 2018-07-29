@@ -46,10 +46,16 @@ validate-in-docker:
 		$(IMAGE_NAME):build make -e validate
 
 build/darwin/$(NAME):
-	mkdir -p build/darwin && CGO_ENABLED=0 GOOS=darwin go build -a -ldflags "-X main.Version=$(VERSION)" -o build/darwin/$(NAME)
+	mkdir -p build/darwin
+	CGO_ENABLED=0 GOOS=darwin go build -a -asmflags=-trimpath=/go/src -gcflags=-trimpath=/go/src \
+										-ldflags "-s -w -X main.Version=$(VERSION)" \
+										-o build/darwin/$(NAME)
 
 build/linux/$(NAME):
-	mkdir -p build/linux  && CGO_ENABLED=0 GOOS=linux  go build -a -ldflags "-X main.Version=$(VERSION)" -o build/linux/$(NAME)
+	mkdir -p build/linux
+	CGO_ENABLED=0 GOOS=linux go build -a -asmflags=-trimpath=/go/src -gcflags=-trimpath=/go/src \
+										-ldflags "-s -w -X main.Version=$(VERSION)" \
+										-o build/linux/$(NAME)
 
 build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 	export SOURCE_DATE_EPOCH=$(shell git log -1 --format=%ct) \
