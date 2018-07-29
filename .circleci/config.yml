@@ -10,8 +10,8 @@ jobs:
       - run:
           command: |
             make build-in-docker
-            [[ -d build ]] && chown -R circleci:circleci build
-            [[ -d vendor ]] && chown -R circleci:circleci vendor
+            [[ -d build ]]  && sudo chown -R circleci:circleci build
+            [[ -d vendor ]] && sudo chown -R circleci:circleci vendor
       - run:
           command: |
             ls -lah
