@@ -46,18 +46,17 @@ func infoMessage(message string) {
 }
 
 func getProcfile(path string) (string, error) {
-	if !termutil.Isatty(os.Stdin.Fd()) {
-		debugMessage("Reading input from stdin")
-		bytes, err := ioutil.ReadAll(os.Stdin)
-		if err != nil {
-			return "", err
-		}
-		return string(bytes), nil
-	}
-
-	debugMessage(fmt.Sprintf("Reading input from file: %v", path))
+	debugMessage(fmt.Sprintf("Attempting to read input from file: %v", path))
 	f, err := os.Open(path)
 	if err != nil {
+		if !termutil.Isatty(os.Stdin.Fd()) {
+			debugMessage("Reading input from stdin")
+			bytes, err := ioutil.ReadAll(os.Stdin)
+			if err != nil {
+				return "", err
+			}
+			return string(bytes), nil
+		}
 		return "", err
 	}
 	defer f.Close()
