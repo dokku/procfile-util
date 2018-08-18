@@ -23,8 +23,31 @@ const portEnvVar = "PORT"
 // Version contains the procfile-util version
 var Version string
 
+// Loglevel stores the current app log level
+var Loglevel = "info"
+
+func logMessage(message string, level string) {
+	if level == "info" {
+		fmt.Println(message)
+		return
+	}
+
+	if Loglevel == "debug" {
+		fmt.Fprintf(os.Stderr, fmt.Sprintf("%v\n", message))
+	}
+}
+
+func debugMessage(message string) {
+	logMessage(message, "debug")
+}
+
+func infoMessage(message string) {
+	logMessage(message, "info")
+}
+
 func getProcfile(path string) (string, error) {
 	if !termutil.Isatty(os.Stdin.Fd()) {
+		debugMessage("Reading input from stdin")
 		bytes, err := ioutil.ReadAll(os.Stdin)
 		if err != nil {
 			return "", err
@@ -32,6 +55,7 @@ func getProcfile(path string) (string, error) {
 		return string(bytes), nil
 	}
 
+	debugMessage(fmt.Sprintf("Reading input from file: %v", path))
 	f, err := os.Open(path)
 	if err != nil {
 		return "", err
@@ -66,6 +90,7 @@ func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 
 		params := re.FindStringSubmatch(line)
 		if len(params) != 3 {
+			debugMessage(fmt.Sprintf("No matching params in line: %v", line))
 			continue
 		}
 
@@ -106,6 +131,7 @@ func expandEnv(e procfileEntry, envPath string, allowEnv bool, defaultPort strin
 	}
 
 	if allowEnv {
+		debugMessage("Allowing getenv variable expansion")
 		expandFunc = func(key string) string {
 			value := os.Getenv(key)
 			if value == "" {
@@ -127,6 +153,7 @@ func expandEnv(e procfileEntry, envPath string, allowEnv bool, defaultPort strin
 			return "", err
 		}
 
+		debugMessage("Allowing .env variable expansion")
 		expandFunc = func(key string) string {
 			if val, ok := env[key]; ok {
 				return val
@@ -233,6 +260,7 @@ func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, proc
 
 func main() {
 	parser := argparse.NewParser("procfile-parser", "A procfile parsing tool")
+	loglevelFlag := parser.Selector("l", "loglevel", []string{"info", "debug"}, &argparse.Options{Default: "info", Help: "loglevel to use"})
 	procfileFlag := parser.String("P", "procfile", &argparse.Options{Default: "Procfile", Help: "path to a procfile"})
 	delimiterFlag := parser.String("D", "delimiter", &argparse.Options{Default: ":", Help: "delimiter in use within procfile"})
 	versionFlag := parser.Flag("v", "version", &argparse.Options{Help: "show version"})
@@ -267,6 +295,8 @@ func main() {
 		os.Exit(0)
 		return
 	}
+
+	Loglevel = *loglevelFlag
 
 	entries, err := parseProcfile(*procfileFlag, *delimiterFlag)
 	if err != nil {
