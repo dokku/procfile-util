@@ -259,7 +259,7 @@ func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, proc
 }
 
 func main() {
-	parser := argparse.NewParser("procfile-parser", "A procfile parsing tool")
+	parser := argparse.NewParser("procfile-util", "A procfile parsing tool")
 	loglevelFlag := parser.Selector("l", "loglevel", []string{"info", "debug"}, &argparse.Options{Default: "info", Help: "loglevel to use"})
 	procfileFlag := parser.String("P", "procfile", &argparse.Options{Default: "Procfile", Help: "path to a procfile"})
 	delimiterFlag := parser.String("D", "delimiter", &argparse.Options{Default: ":", Help: "delimiter in use within procfile"})
