@@ -72,7 +72,8 @@ func getProcfile(path string) (string, error) {
 
 func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	var entries []procfileEntry
-	re, _ := regexp.Compile(`^([A-Za-z0-9_]+)` + delimiter + `\s*(.+)$`)
+	reCmd, _ := regexp.Compile(`^([A-Za-z0-9_]+)` + delimiter + `\s*(.+)$`)
+	reComment, _ := regexp.Compile(`^(.*)\s#.+$`)
 
 	text, err := getProcfile(path)
 	if err != nil {
@@ -87,7 +88,7 @@ func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 			continue
 		}
 
-		params := re.FindStringSubmatch(line)
+		params := reCmd.FindStringSubmatch(line)
 		if len(params) != 3 {
 			debugMessage(fmt.Sprintf("No matching params in line: %v", line))
 			continue
@@ -99,6 +100,11 @@ func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 			return entries, fmt.Errorf("process names must be unique")
 		}
 		names[name] = true
+
+		commentParams := reComment.FindStringSubmatch(cmd)
+		if len(commentParams) == 2 {
+			cmd = commentParams[1]
+		}
 
 		entries = append(entries, procfileEntry{name, cmd})
 	}
