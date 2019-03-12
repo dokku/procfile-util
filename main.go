@@ -72,7 +72,7 @@ func getProcfile(path string) (string, error) {
 
 func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	var entries []procfileEntry
-	reCmd, _ := regexp.Compile(`^([A-Za-z0-9_]+)` + delimiter + `\s*(.+)$`)
+	reCmd, _ := regexp.Compile(`^([A-Za-z0-9_-]+)` + delimiter + `\s*(.+)$`)
 	reComment, _ := regexp.Compile(`^(.*)\s#.+$`)
 
 	text, err := getProcfile(path)
