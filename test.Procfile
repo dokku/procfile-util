@@ -5,9 +5,13 @@
 # Procfile for development using the new threaded worker (scheduler, twitter stream and delayed job)
 cron: node worker.js
 web: node web.js # testing inline comment
-worker: node worker.js
+wor-ker: node worker.js
+-wor-ker2: node worker.js
+-wor-ker_2: node worker.js
 custom: echo -n
-
+2custom: echo -n
+-3custom-: echo -n
+release: touch /app/release.test
 
 # Old version with separate processes (use this if you have issues with the threaded version)
 # web: bundle exec rails server
