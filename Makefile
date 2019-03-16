@@ -83,7 +83,7 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		--input-type dir \
 		--license 'MIT License' \
 		--maintainer "$(MAINTAINER_NAME) <$(EMAIL)>" \
-		--name procfile-util \
+		--name $(NAME) \
 		--output-type deb \
 		--package build/deb/$(NAME)_$(VERSION)_amd64.deb \
 		--url "https://github.com/$(MAINTAINER)/$(REPOSITORY)" \
@@ -103,7 +103,7 @@ build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 		--input-type dir \
 		--license 'MIT License' \
 		--maintainer "$(MAINTAINER_NAME) <$(EMAIL)>" \
-		--name procfile-util \
+		--name $(NAME) \
 		--output-type rpm \
 		--package build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm \
 		--rpm-os linux \
