@@ -279,9 +279,10 @@ func main() {
 	envPathExpandFlag := expandCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
 	processTypeExpandFlag := expandCmd.String("p", "process-type", &argparse.Options{Help: "name of process to expand"})
 
-	listCmd := parser.NewCommand("list", "list all process types in a procfile")
 
 	checkCmd := parser.NewCommand("check", "check that the specified procfile is valid")
+
+	listCmd := parser.NewCommand("list", "list all process types in a procfile")
 
 	showCmd := parser.NewCommand("show", "show the command for a specific process type")
 	allowGetenvShowFlag := showCmd.Flag("a", "allow-getenv", &argparse.Options{Help: "allow the use of the existing env when expanding commands"})
