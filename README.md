@@ -83,6 +83,23 @@ procfile-util delete --process web --stdout
 procfile-util list
 ```
 
+### set
+
+> set the command for a process type in a procfile
+
+This command does not retain comments or extra newline characters. Specifying both the `write-path` and `stdout` flags will result in an error.
+
+```shell
+# set the web process and write the file
+procfile-util set --process web --command "python app.py -p $PORT"
+
+# set the web process and write output to other.Procfile
+procfile-util set --process web --command "python app.py -p $PORT" --write-path other.Procfile
+
+# set the web process and write output to stdout
+procfile-util set --process web --command "python app.py -p $PORT" --stdout
+```
+
 ### show
 
 > show the command for a specific process type
