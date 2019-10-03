@@ -277,7 +277,7 @@ func main() {
 	expandCmd := parser.NewCommand("expand", "expands a procfile against a specific environment")
 	allowGetenvExpandFlag := expandCmd.Flag("a", "allow-getenv", &argparse.Options{Help: "allow the use of the existing env when expanding commands"})
 	envPathExpandFlag := expandCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
-	processTypeExpandFlag := expandCmd.String("p", "process-type", &argparse.Options{Help: "name of process to retrieve"})
+	processTypeExpandFlag := expandCmd.String("p", "process-type", &argparse.Options{Help: "name of process to expand"})
 
 	listCmd := parser.NewCommand("list", "list all process types in a procfile")
 
@@ -286,7 +286,7 @@ func main() {
 	showCmd := parser.NewCommand("show", "show the command for a specific process type")
 	allowGetenvShowFlag := showCmd.Flag("a", "allow-getenv", &argparse.Options{Help: "allow the use of the existing env when expanding commands"})
 	envPathShowFlag := showCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
-	processTypeShowFlag := showCmd.String("p", "process-type", &argparse.Options{Help: "name of process to retrieve", Required: true})
+	processTypeShowFlag := showCmd.String("p", "process-type", &argparse.Options{Help: "name of process to show", Required: true})
 
 	err := parser.Parse(os.Args)
 	if err != nil {
