@@ -347,6 +347,13 @@ func main() {
 	defaultPortFlag := parser.String("d", "default-port", &argparse.Options{Default: "5000", Help: "default port to use"})
 	versionFlag := parser.Flag("v", "version", &argparse.Options{Help: "show version"})
 
+	checkCmd := parser.NewCommand("check", "check that the specified procfile is valid")
+
+	deleteCmd := parser.NewCommand("delete", "delete a process type from a file")
+	processTypeDeleteFlag := deleteCmd.String("p", "process-type", &argparse.Options{Help: "name of process to delete", Required: true})
+	stdoutDeleteFlag := deleteCmd.Flag("s", "stdout", &argparse.Options{Help: "write output to stdout"})
+	writePathDeleteFlag := deleteCmd.String("w", "write-path", &argparse.Options{Help: "path to Procfile to write to"})
+
 	existsCmd := parser.NewCommand("exists", "check if a process type exists")
 	processTypeExistsFlag := existsCmd.String("p", "process-type", &argparse.Options{Help: "name of process to retrieve"})
 
@@ -354,13 +361,6 @@ func main() {
 	allowGetenvExpandFlag := expandCmd.Flag("a", "allow-getenv", &argparse.Options{Help: "allow the use of the existing env when expanding commands"})
 	envPathExpandFlag := expandCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
 	processTypeExpandFlag := expandCmd.String("p", "process-type", &argparse.Options{Help: "name of process to expand"})
-
-	deleteCmd := parser.NewCommand("delete", "delete a process type from a file")
-	processTypeDeleteFlag := deleteCmd.String("p", "process-type", &argparse.Options{Help: "name of process to delete", Required: true})
-	stdoutDeleteFlag := deleteCmd.Flag("s", "stdout", &argparse.Options{Help: "write output to stdout"})
-	writePathDeleteFlag := deleteCmd.String("w", "write-path", &argparse.Options{Help: "path to Procfile to write to"})
-
-	checkCmd := parser.NewCommand("check", "check that the specified procfile is valid")
 
 	listCmd := parser.NewCommand("list", "list all process types in a procfile")
 
@@ -400,12 +400,12 @@ func main() {
 	success := false
 	if checkCmd.Happened() {
 		success = checkCommand(entries)
+	} else if deleteCmd.Happened() {
+		success = deleteCommand(entries, *processTypeDeleteFlag, *writePathDeleteFlag, *stdoutDeleteFlag, *delimiterFlag, *procfileFlag)
 	} else if existsCmd.Happened() {
 		success = existsCommand(entries, *processTypeExistsFlag)
 	} else if expandCmd.Happened() {
 		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag, *defaultPortFlag, *delimiterFlag)
-	} else if deleteCmd.Happened() {
-		success = deleteCommand(entries, *processTypeDeleteFlag, *writePathDeleteFlag, *stdoutDeleteFlag, *delimiterFlag, *procfileFlag)
 	} else if listCmd.Happened() {
 		success = listCommand(entries)
 	} else if setCmd.Happened() {
