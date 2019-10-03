@@ -258,7 +258,7 @@ func existsCommand(entries []procfileEntry, processType string) bool {
 
 func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort string, delimiter string) bool {
 	hasErrors := false
-	commands := make(map[string]string)
+	var expandedEntries []procfileEntry
 	for _, entry := range entries {
 		command, err := expandEnv(entry, envPath, allowGetenv, defaultPort)
 		if err != nil {
@@ -266,18 +266,20 @@ func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, pr
 			hasErrors = true
 		}
 
-		commands[entry.Name] = command
+		entry.Command = command
+		expandedEntries = append(expandedEntries, entry)
 	}
 
 	if hasErrors {
 		return false
 	}
 
-	for k, v := range commands {
-		if processType == "" || processType == k {
-			fmt.Printf("%v%v %v\n", k, delimiter, v)
+	for _, entry := range expandedEntries {
+		if processType == "" || processType == entry.Name {
+			fmt.Printf("%v%v %v\n", entry.Name, delimiter, entry.Command)
 		}
 	}
+
 	return true
 }
 
