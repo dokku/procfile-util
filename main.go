@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/akamensky/argparse"
@@ -70,6 +71,50 @@ func getProcfile(path string) (string, error) {
 	return strings.Join(lines, "\n"), err
 }
 
+func outputProcfile(path string, writePath string, delimiter string, stdout bool, entries []procfileEntry) bool {
+	if writePath != "" && stdout {
+		fmt.Fprintf(os.Stderr, "cannot specify both --stdout and --write-path flags\n")
+		return false
+	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Name < entries[j].Name
+	})
+
+	if stdout {
+		for _, entry := range entries {
+			fmt.Printf("%v%v %v\n", entry.Name, delimiter, entry.Command)
+		}
+		return true
+	}
+
+	if writePath != "" {
+		path = writePath
+	}
+
+	if err := writeProcfile(path, delimiter, entries); err != nil {
+		fmt.Fprintf(os.Stderr, "error writing procfile: %s\n", err)
+		return false
+	}
+
+	return true
+}
+
+func writeProcfile(path string, delimiter string, entries []procfileEntry) error {
+	debugMessage(fmt.Sprintf("Attempting to write output to file: %v", path))
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	w := bufio.NewWriter(file)
+	for _, entry := range entries {
+		fmt.Fprintln(w, fmt.Sprintf("%v%v %v", entry.Name, delimiter, entry.Command))
+	}
+	return w.Flush()
+}
+
 func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	var entries []procfileEntry
 	reCmd, _ := regexp.Compile(`^([A-Za-z0-9_-]+)` + delimiter + `\s*(.+)$`)
@@ -116,6 +161,10 @@ func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	if len(entries) == 0 {
 		return entries, fmt.Errorf("no entries found in Procfile")
 	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Name < entries[j].Name
+	})
 
 	return entries, nil
 }
@@ -207,9 +256,9 @@ func existsCommand(entries []procfileEntry, processType string) bool {
 	return false
 }
 
-func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort string) bool {
+func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort string, delimiter string) bool {
 	hasErrors := false
-	commands := make(map[string]string)
+	var expandedEntries []procfileEntry
 	for _, entry := range entries {
 		command, err := expandEnv(entry, envPath, allowGetenv, defaultPort)
 		if err != nil {
@@ -217,19 +266,33 @@ func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, pr
 			hasErrors = true
 		}
 
-		commands[entry.Name] = command
+		entry.Command = command
+		expandedEntries = append(expandedEntries, entry)
 	}
 
 	if hasErrors {
 		return false
 	}
 
-	for k, v := range commands {
-		if processType == "" || processType == k {
-			fmt.Printf("%v: %v\n", k, v)
+	for _, entry := range expandedEntries {
+		if processType == "" || processType == entry.Name {
+			fmt.Printf("%v%v %v\n", entry.Name, delimiter, entry.Command)
 		}
 	}
+
 	return true
+}
+
+func deleteCommand(entries []procfileEntry, processType string, writePath string, stdout bool, delimiter string, path string) bool {
+	var validEntries []procfileEntry
+	for _, entry := range entries {
+		if processType == entry.Name {
+			continue
+		}
+		validEntries = append(validEntries, entry)
+	}
+
+	return outputProcfile(path, writePath, delimiter, stdout, validEntries)
 }
 
 func listCommand(entries []procfileEntry) bool {
@@ -237,6 +300,19 @@ func listCommand(entries []procfileEntry) bool {
 		fmt.Printf("%v\n", entry.Name)
 	}
 	return true
+}
+
+func setCommand(entries []procfileEntry, processType string, command string, writePath string, stdout bool, delimiter string, path string) bool {
+	var validEntries []procfileEntry
+	validEntries = append(validEntries, procfileEntry{processType, command})
+	for _, entry := range entries {
+		if processType == entry.Name {
+			continue
+		}
+		validEntries = append(validEntries, entry)
+	}
+
+	return outputProcfile(path, writePath, delimiter, stdout, validEntries)
 }
 
 func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort string) bool {
@@ -268,8 +344,15 @@ func main() {
 	loglevelFlag := parser.Selector("l", "loglevel", []string{"info", "debug"}, &argparse.Options{Default: "info", Help: "loglevel to use"})
 	procfileFlag := parser.String("P", "procfile", &argparse.Options{Default: "Procfile", Help: "path to a procfile"})
 	delimiterFlag := parser.String("D", "delimiter", &argparse.Options{Default: ":", Help: "delimiter in use within procfile"})
-	versionFlag := parser.Flag("v", "version", &argparse.Options{Help: "show version"})
 	defaultPortFlag := parser.String("d", "default-port", &argparse.Options{Default: "5000", Help: "default port to use"})
+	versionFlag := parser.Flag("v", "version", &argparse.Options{Help: "show version"})
+
+	checkCmd := parser.NewCommand("check", "check that the specified procfile is valid")
+
+	deleteCmd := parser.NewCommand("delete", "delete a process type from a file")
+	processTypeDeleteFlag := deleteCmd.String("p", "process-type", &argparse.Options{Help: "name of process to delete", Required: true})
+	stdoutDeleteFlag := deleteCmd.Flag("s", "stdout", &argparse.Options{Help: "write output to stdout"})
+	writePathDeleteFlag := deleteCmd.String("w", "write-path", &argparse.Options{Help: "path to Procfile to write to"})
 
 	existsCmd := parser.NewCommand("exists", "check if a process type exists")
 	processTypeExistsFlag := existsCmd.String("p", "process-type", &argparse.Options{Help: "name of process to retrieve"})
@@ -277,16 +360,20 @@ func main() {
 	expandCmd := parser.NewCommand("expand", "expands a procfile against a specific environment")
 	allowGetenvExpandFlag := expandCmd.Flag("a", "allow-getenv", &argparse.Options{Help: "allow the use of the existing env when expanding commands"})
 	envPathExpandFlag := expandCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
-	processTypeExpandFlag := expandCmd.String("p", "process-type", &argparse.Options{Help: "name of process to retrieve"})
+	processTypeExpandFlag := expandCmd.String("p", "process-type", &argparse.Options{Help: "name of process to expand"})
 
 	listCmd := parser.NewCommand("list", "list all process types in a procfile")
 
-	checkCmd := parser.NewCommand("check", "check that the specified procfile is valid")
+	setCmd := parser.NewCommand("set", "set the command for a process type in a file")
+	processTypeSetFlag := setCmd.String("p", "process-type", &argparse.Options{Help: "name of process to set", Required: true})
+	commandSetFlag := setCmd.String("c", "command", &argparse.Options{Help: "command to set", Required: true})
+	stdoutSetFlag := setCmd.Flag("s", "stdout", &argparse.Options{Help: "write output to stdout"})
+	writePathSetFlag := setCmd.String("w", "write-path", &argparse.Options{Help: "path to Procfile to write to"})
 
 	showCmd := parser.NewCommand("show", "show the command for a specific process type")
 	allowGetenvShowFlag := showCmd.Flag("a", "allow-getenv", &argparse.Options{Help: "allow the use of the existing env when expanding commands"})
 	envPathShowFlag := showCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
-	processTypeShowFlag := showCmd.String("p", "process-type", &argparse.Options{Help: "name of process to retrieve", Required: true})
+	processTypeShowFlag := showCmd.String("p", "process-type", &argparse.Options{Help: "name of process to show", Required: true})
 
 	err := parser.Parse(os.Args)
 	if err != nil {
@@ -313,12 +400,16 @@ func main() {
 	success := false
 	if checkCmd.Happened() {
 		success = checkCommand(entries)
+	} else if deleteCmd.Happened() {
+		success = deleteCommand(entries, *processTypeDeleteFlag, *writePathDeleteFlag, *stdoutDeleteFlag, *delimiterFlag, *procfileFlag)
 	} else if existsCmd.Happened() {
 		success = existsCommand(entries, *processTypeExistsFlag)
 	} else if expandCmd.Happened() {
-		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag, *defaultPortFlag)
+		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag, *defaultPortFlag, *delimiterFlag)
 	} else if listCmd.Happened() {
 		success = listCommand(entries)
+	} else if setCmd.Happened() {
+		success = setCommand(entries, *processTypeSetFlag, *commandSetFlag, *writePathSetFlag, *stdoutSetFlag, *delimiterFlag, *procfileFlag)
 	} else if showCmd.Happened() {
 		success = showCommand(entries, *envPathShowFlag, *allowGetenvShowFlag, *processTypeShowFlag, *defaultPortFlag)
 	} else {

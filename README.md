@@ -20,6 +20,23 @@ All commands take a `-P` or `--procfile` flag to specify an alternative `Procfil
 procfile-util check
 ```
 
+### delete
+
+> delete a process type from a procfile
+
+This command does not retain comments or extra newline characters. Specifying both the `write-path` and `stdout` flags will result in an error.
+
+```shell
+# delete the web process and write the file
+procfile-util delete --process web
+
+# delete the web process and write output to other.Procfile
+procfile-util delete --process web --write-path other.Procfile
+
+# delete the web process and write output to stdout
+procfile-util delete --process web --stdout
+```
+
 ### exists
 
 > check if a process type exists
@@ -57,12 +74,30 @@ procfile-util expand --allow-getenv --env-file .env
 # specify the default-port when performing variable expansion
 procfile-util expand --allow-getenv --env-file .env --default-port 3000
 ```
+
 ### list
 
 > list all process types in a procfile
 
 ```shell
 procfile-util list
+```
+
+### set
+
+> set the command for a process type in a procfile
+
+This command does not retain comments or extra newline characters. Specifying both the `write-path` and `stdout` flags will result in an error.
+
+```shell
+# set the web process and write the file
+procfile-util set --process web --command "python app.py -p $PORT"
+
+# set the web process and write output to other.Procfile
+procfile-util set --process web --command "python app.py -p $PORT" --write-path other.Procfile
+
+# set the web process and write output to stdout
+procfile-util set --process web --command "python app.py -p $PORT" --stdout
 ```
 
 ### show
