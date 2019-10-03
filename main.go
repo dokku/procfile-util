@@ -256,7 +256,7 @@ func existsCommand(entries []procfileEntry, processType string) bool {
 	return false
 }
 
-func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort string) bool {
+func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort string, delimiter string) bool {
 	hasErrors := false
 	commands := make(map[string]string)
 	for _, entry := range entries {
@@ -275,7 +275,7 @@ func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, pr
 
 	for k, v := range commands {
 		if processType == "" || processType == k {
-			fmt.Printf("%v: %v\n", k, v)
+			fmt.Printf("%v%v %v\n", k, delimiter, v)
 		}
 	}
 	return true
@@ -401,7 +401,7 @@ func main() {
 	} else if existsCmd.Happened() {
 		success = existsCommand(entries, *processTypeExistsFlag)
 	} else if expandCmd.Happened() {
-		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag, *defaultPortFlag)
+		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag, *defaultPortFlag, *delimiterFlag)
 	} else if deleteCmd.Happened() {
 		success = deleteCommand(entries, *processTypeDeleteFlag, *writePathDeleteFlag, *stdoutDeleteFlag, *delimiterFlag, *procfileFlag)
 	} else if listCmd.Happened() {
