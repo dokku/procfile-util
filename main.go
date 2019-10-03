@@ -70,6 +70,21 @@ func getProcfile(path string) (string, error) {
 	return strings.Join(lines, "\n"), err
 }
 
+func writeProcfile(path string, delimiter string, entries []procfileEntry) error {
+	debugMessage(fmt.Sprintf("Attempting to write output to file: %v", path))
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	w := bufio.NewWriter(file)
+	for _, entry := range entries {
+		fmt.Fprintln(w, fmt.Sprintf("%v%v %v", entry.Name, delimiter, entry.Command))
+	}
+	return w.Flush()
+}
+
 func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	var entries []procfileEntry
 	reCmd, _ := regexp.Compile(`^([A-Za-z0-9_-]+)` + delimiter + `\s*(.+)$`)
@@ -232,6 +247,39 @@ func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, pr
 	return true
 }
 
+func deleteCommand(entries []procfileEntry, processType string, writePathDeleteFlag string, stdoutDeleteFlag bool, delimiterFlag string, path string) bool {
+	if writePathDeleteFlag != "" && stdoutDeleteFlag {
+		fmt.Fprintf(os.Stderr, "cannot specify both --stdout and --write-path flags\n")
+		return false
+	}
+
+	var validEntries []procfileEntry
+	for _, entry := range entries {
+		if processType == entry.Name {
+			continue
+		}
+		validEntries = append(validEntries, entry)
+	}
+
+	if stdoutDeleteFlag {
+		for _, entry := range validEntries {
+			fmt.Printf("%v%v %v\n", entry.Name, delimiterFlag, entry.Command)
+		}
+		return true
+	}
+
+	if writePathDeleteFlag != "" {
+		path = writePathDeleteFlag
+	}
+
+	if err := writeProcfile(path, delimiterFlag, validEntries); err != nil {
+		fmt.Fprintf(os.Stderr, "error writing procfile: %s\n", err)
+		return false
+	}
+
+	return true
+}
+
 func listCommand(entries []procfileEntry) bool {
 	for _, entry := range entries {
 		fmt.Printf("%v\n", entry.Name)
@@ -279,6 +327,10 @@ func main() {
 	envPathExpandFlag := expandCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
 	processTypeExpandFlag := expandCmd.String("p", "process-type", &argparse.Options{Help: "name of process to expand"})
 
+	deleteCmd := parser.NewCommand("delete", "delete a process type from a file")
+	processTypeDeleteFlag := deleteCmd.String("p", "process-type", &argparse.Options{Help: "name of process to delete", Required: true})
+	stdoutDeleteFlag := deleteCmd.Flag("s", "stdout", &argparse.Options{Help: "write output to stdout"})
+	writePathDeleteFlag := deleteCmd.String("w", "write-path", &argparse.Options{Help: "path to Procfile to write to"})
 
 	checkCmd := parser.NewCommand("check", "check that the specified procfile is valid")
 
@@ -318,6 +370,8 @@ func main() {
 		success = existsCommand(entries, *processTypeExistsFlag)
 	} else if expandCmd.Happened() {
 		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag, *defaultPortFlag)
+	} else if deleteCmd.Happened() {
+		success = deleteCommand(entries, *processTypeDeleteFlag, *writePathDeleteFlag, *stdoutDeleteFlag, *delimiterFlag, *procfileFlag)
 	} else if listCmd.Happened() {
 		success = listCommand(entries)
 	} else if showCmd.Happened() {

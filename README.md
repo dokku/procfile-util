@@ -57,6 +57,24 @@ procfile-util expand --allow-getenv --env-file .env
 # specify the default-port when performing variable expansion
 procfile-util expand --allow-getenv --env-file .env --default-port 3000
 ```
+
+### delete
+
+> delete a process type from a procfile
+
+This command does not retain comments or extra newline characters. Specifying both the `write-path` and `stdout` flags will result in an error.
+
+```shell
+# delete the web process and write the file
+procfile-util delete --process web
+
+# delete the web process and write output to other.Procfile
+procfile-util delete --process web --write-path other.Procfile
+
+# delete the web process and write output to stdout
+procfile-util delete --process web --stdout
+```
+
 ### list
 
 > list all process types in a procfile
