@@ -5,16 +5,16 @@ MAINTAINER_NAME = Jose Diaz-Gonzalez
 REPOSITORY = go-procfile-util
 HARDWARE = $(shell uname -m)
 SYSTEM_NAME  = $(shell uname -s | tr '[:upper:]' '[:lower:]')
-BASE_VERSION ?= 0.6.0
+BASE_VERSION ?= 0.7.0
 IMAGE_NAME ?= $(MAINTAINER)/$(REPOSITORY)
 PACKAGECLOUD_REPOSITORY ?= dokku/dokku-betafish
 
 ifeq ($(CIRCLE_BRANCH),release)
 	VERSION ?= $(BASE_VERSION)
-	DOCKER_VERSION = $(VERSION)
+	DOCKER_IMAGE_VERSION = $(VERSION)
 else
 	VERSION = $(shell echo "${BASE_VERSION}")build+$(shell git rev-parse --short HEAD)
-	DOCKER_VERSION = $(shell echo "${BASE_VERSION}")build-$(shell git rev-parse --short HEAD)
+	DOCKER_IMAGE_VERSION = $(shell echo "${BASE_VERSION}")build-$(shell git rev-parse --short HEAD)
 endif
 
 version:
@@ -39,7 +39,7 @@ targets = $(addsuffix -in-docker, $(LIST))
 	@echo "GITHUB_ACCESS_TOKEN=$(GITHUB_ACCESS_TOKEN)" >> .env.docker
 	@echo "IMAGE_NAME=$(IMAGE_NAME)" >> .env.docker
 	@echo "PACKAGECLOUD_REPOSITORY=$(PACKAGECLOUD_REPOSITORY)" >> .env.docker
-	@echo "PACKAGECLOUD_TOKEN=$(PACKAGECLOUD_API_TOKEN)" >> .env.docker
+	@echo "PACKAGECLOUD_TOKEN=$(PACKAGECLOUD_TOKEN)" >> .env.docker
 	@echo "VERSION=$(VERSION)" >> .env.docker
 
 build:
@@ -83,7 +83,7 @@ build/deb/$(NAME)_$(VERSION)_amd64.deb: build/linux/$(NAME)
 		--input-type dir \
 		--license 'MIT License' \
 		--maintainer "$(MAINTAINER_NAME) <$(EMAIL)>" \
-		--name procfile-util \
+		--name $(NAME) \
 		--output-type deb \
 		--package build/deb/$(NAME)_$(VERSION)_amd64.deb \
 		--url "https://github.com/$(MAINTAINER)/$(REPOSITORY)" \
@@ -103,7 +103,7 @@ build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm: build/linux/$(NAME)
 		--input-type dir \
 		--license 'MIT License' \
 		--maintainer "$(MAINTAINER_NAME) <$(EMAIL)>" \
-		--name procfile-util \
+		--name $(NAME) \
 		--output-type rpm \
 		--package build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm \
 		--rpm-os linux \
@@ -122,21 +122,21 @@ circleci:
 	rm -f ~/.gitconfig
 
 docker-image:
-	docker build --rm -q -f Dockerfile.hub -t $(IMAGE_NAME):$(DOCKER_VERSION) .
+	docker build --rm -q -f Dockerfile.hub -t $(IMAGE_NAME):$(DOCKER_IMAGE_VERSION) .
 
-gh-release:
-	mkdir -p build
-	curl -o build/gh-release.tgz -sL https://github.com/progrium/gh-release/releases/download/v2.2.1/gh-release_2.2.1_$(SYSTEM_NAME)_$(HARDWARE).tgz
-	tar xf build/gh-release.tgz -C build
-	chmod +x build/gh-release
+bin/gh-release:
+	mkdir -p bin
+	curl -o bin/gh-release.tgz -sL https://github.com/progrium/gh-release/releases/download/v2.2.1/gh-release_2.2.1_$(SYSTEM_NAME)_$(HARDWARE).tgz
+	tar xf bin/gh-release.tgz -C bin
+	chmod +x bin/gh-release
 
-release: build gh-release
+release: build bin/gh-release
 	rm -rf release && mkdir release
 	tar -zcf release/$(NAME)_$(VERSION)_linux_$(HARDWARE).tgz -C build/linux $(NAME)
 	tar -zcf release/$(NAME)_$(VERSION)_darwin_$(HARDWARE).tgz -C build/darwin $(NAME)
 	cp build/deb/$(NAME)_$(VERSION)_amd64.deb release/$(NAME)_$(VERSION)_amd64.deb
 	cp build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm release/$(NAME)-$(VERSION)-1.x86_64.rpm
-	build/gh-release create $(MAINTAINER)/$(REPOSITORY) $(VERSION) $(shell git rev-parse --abbrev-ref HEAD)
+	bin/gh-release create $(MAINTAINER)/$(REPOSITORY) $(VERSION) $(shell git rev-parse --abbrev-ref HEAD)
 
 release-packagecloud:
 	@$(MAKE) release-packagecloud-deb
@@ -159,10 +159,6 @@ release-packagecloud-deb: build/deb/$(NAME)_$(VERSION)_amd64.deb
 
 release-packagecloud-rpm: build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm
 	package_cloud push $(PACKAGECLOUD_REPOSITORY)/el/7           build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm
-
-store-artifacts: build
-	mkdir -p /tmp/artifacts
-	cp -r build/* /tmp/artifacts
 
 validate:
 	mkdir -p validation
