@@ -342,8 +342,8 @@ func main() {
 	loglevelFlag := parser.Selector("l", "loglevel", []string{"info", "debug"}, &argparse.Options{Default: "info", Help: "loglevel to use"})
 	procfileFlag := parser.String("P", "procfile", &argparse.Options{Default: "Procfile", Help: "path to a procfile"})
 	delimiterFlag := parser.String("D", "delimiter", &argparse.Options{Default: ":", Help: "delimiter in use within procfile"})
-	versionFlag := parser.Flag("v", "version", &argparse.Options{Help: "show version"})
 	defaultPortFlag := parser.String("d", "default-port", &argparse.Options{Default: "5000", Help: "default port to use"})
+	versionFlag := parser.Flag("v", "version", &argparse.Options{Help: "show version"})
 
 	existsCmd := parser.NewCommand("exists", "check if a process type exists")
 	processTypeExistsFlag := existsCmd.String("p", "process-type", &argparse.Options{Help: "name of process to retrieve"})
