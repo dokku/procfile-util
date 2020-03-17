@@ -15,8 +15,8 @@ script
   [ -r /etc/sysconfig/{{ .app }} ] && . /etc/sysconfig/{{ .app }}
   cd {{ .working_directory }}
   exec {{ .command }} \
-    >> {{ .log }}/{{ .app }}/{{ .process_type }}-stdout.log \
-    2>> {{ .log }}/{{ .app }}/{{ .process_type }}-stderr.log
+    >> {{ .log }}/{{ .app }}/{{ .process_type }}-{{ .num }}-stdout.log \
+    2>> {{ .log }}/{{ .app }}/{{ .process_type }}-{{ .num }}-stderr.log
 end script
 
 post-start script
