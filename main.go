@@ -307,6 +307,7 @@ func exportCommand(entries []procfileEntry, app string, description string, envP
 		"runit":        true,
 		"systemd":      true,
 		"systemd-user": true,
+		"upstart":      true,
 	}
 
 	if _, ok := formats[format]; !ok {
@@ -376,6 +377,10 @@ func exportCommand(entries []procfileEntry, app string, description string, envP
 
 	if format == "systemd-user" {
 		return exportSystemdUser(app, entries, formations, location, defaultPort, vars)
+	}
+
+	if format == "upstart" {
+		return exportUpstart(app, entries, formations, location, defaultPort, vars)
 	}
 
 	return false

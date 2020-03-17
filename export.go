@@ -198,6 +198,59 @@ func exportSystemdUser(app string, entries []procfileEntry, formations map[strin
 	return true
 }
 
+func exportUpstart(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
+	p, err := loadTemplate("program", "templates/upstart/default/program.conf.tmpl")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return false
+	}
+
+	c, err := loadTemplate("app", "templates/upstart/default/control.conf.tmpl")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return false
+	}
+
+	t, err := loadTemplate("process-type", "templates/upstart/default/process-type.conf.tmpl")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return false
+	}
+
+	if _, err := os.Stat(location); os.IsNotExist(err) {
+		os.MkdirAll(location, os.ModePerm)
+	}
+
+	for i, entry := range entries {
+		num := 1
+		count := processCount(entry, formations)
+
+		variables := vars
+		variables["process_type"] = entry.Name
+		fmt.Println("writing:", app+"-"+entry.Name+".conf")
+		if !writeOutput(t, location+"/"+app+"-"+entry.Name+".conf", variables) {
+			return false
+		}
+
+		for num <= count {
+			processName := fmt.Sprintf("%s-%d", entry.Name, num)
+			fileName := fmt.Sprintf("%s-%d", entry.Name, num)
+			fmt.Println("writing:", app+"-"+fileName+".conf")
+
+			port := portFor(i, num, defaultPort)
+			config := templateVars(app, entry, processName, num, port, vars)
+			if !writeOutput(p, location+"/"+app+"-"+fileName+".conf", config) {
+				return false
+			}
+
+			num += 1
+		}
+	}
+
+	config := vars
+	fmt.Println("writing:", app+".conf")
+	return writeOutput(c, location+"/"+app+".conf", config)
+}
 func processCount(entry procfileEntry, formations map[string]formationEntry) int {
 	count := 0
 	if f, ok := formations["all"]; ok {
