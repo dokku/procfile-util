@@ -9,13 +9,13 @@ User={{ .user }}
 Group={{ .group }}
 WorkingDirectory={{ .working_directory }}
 Environment=PORT={{ .port }}
-Environment=PS={{ .app }}-{{ .process_name }}
+Environment=PS={{ .app }}-{{ .process_type }}.{{ .num }}
 EnvironmentFile=-/etc/default/{{ .app  }}
 EnvironmentFile=-/etc/sysconfig/{{ .app }}
 {{- range $key, $value := .env }}
 Environment="{{ $key }}={{ $value }}"
 {{ end }}
-ExecStart=/bin/bash -lc 'exec -a "{{ .app }}-{{ .process_name }}" {{ .command }}'
+ExecStart=/bin/bash -lc 'exec -a "{{ .app }}-{{ .process_type }}.{{ .num }}" {{ .command }}'
 Restart=always
 RestartSec=14s
 StandardInput=null

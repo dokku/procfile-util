@@ -98,7 +98,7 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 		for num <= count {
 			processDirectory := fmt.Sprintf("%s-%s-%d", app, entry.Name, num)
 			folderPath := location + "/" + processDirectory
-			processName := fmt.Sprintf("%s.%d", entry.Name, num)
+			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 
 			fmt.Println("creating:", app+"-"+processName)
 			os.MkdirAll(folderPath, os.ModePerm)
@@ -113,6 +113,7 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 
 			config := vars
 			config["command"] = entry.Command
+			config["command_args"] = entry.commandArgs()
 			config["num"] = num
 			config["port"] = port
 			config["process_name"] = processName
@@ -230,12 +231,14 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 
 		num := 1
 		for num <= count {
-			processName := fmt.Sprintf("%s.%d", entry.Name, num)
-			processes = append(processes, fmt.Sprintf("%s.service", processName))
-			fmt.Println("writing:", app+"-"+processName+".service")
+			processName := fmt.Sprintf("%s-%d", entry.Name, num)
+			fileName := fmt.Sprintf("%s.%d", entry.Name, num)
+			processes = append(processes, fmt.Sprintf(app+"-%s.service", fileName))
+			fmt.Println("writing:", app+"-"+fileName+".service")
 
 			config := vars
 			config["command"] = entry.Command
+			config["command_args"] = entry.commandArgs()
 			config["num"] = num
 			config["port"] = portFor(i, num, defaultPort)
 			config["process_name"] = processName
@@ -244,7 +247,7 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 				config["description"] = fmt.Sprintf("%s process for %s", processName, app)
 			}
 
-			f, err := os.Create(location + "/" + app + "-" + processName + ".service")
+			f, err := os.Create(location + "/" + app + "-" + fileName + ".service")
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
 				return false
@@ -301,7 +304,7 @@ func exportSystemdUser(app string, entries []procfileEntry, formations map[strin
 
 		num := 1
 		for num <= count {
-			processName := fmt.Sprintf("%s.%d", entry.Name, num)
+			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			processes = append(processes, fmt.Sprintf("%s.service", processName))
 			fmt.Println("writing:", app+"-"+processName+".service")
 

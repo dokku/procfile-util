@@ -5,8 +5,8 @@ Description={{ .description }}{{ end }}
 [Service]
 Type=simple
 Environment=PORT={{ .port }}
-Environment=PS={{ .app }}-{{ .process_name }}
-EnvironmentFile=-{{ .home }}/.config/systemd/user/{{ .app }}-{{ .process_name }}.environment
+Environment=PS={{ .app }}-{{ .process_type }}.{{ .num }}
+EnvironmentFile=-{{ .home }}/.config/systemd/user/{{ .app }}-{{ .process_type }}.{{ .num }}.environment
 ExecStart={{ .command }}
 Restart=always
 WorkingDirectory={{ .working_directory }}
