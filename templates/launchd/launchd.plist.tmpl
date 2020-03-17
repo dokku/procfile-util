@@ -8,6 +8,8 @@
     <dict>
         <key>PORT</key>
         <string>{{ .port }}</string>
+        <key>PS</key>
+        <string>{{ .ps }}</string>
     {{- range $key, $value := .env }}
         <key>{{ $key }}</key>
         <string>{{ $value }}</string>{{ end }}
