@@ -7,6 +7,61 @@ import (
 	"text/template"
 )
 
+func exportLaunchd(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
+	service, err := Asset("templates/launchd/launchd.plist.tmpl")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		return false
+	}
+
+	s, err := template.New("service").Parse(string(service))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error parsing template: %s\n", err)
+		return false
+	}
+
+	if _, err := os.Stat(location); os.IsNotExist(err) {
+		os.MkdirAll(location, os.ModePerm)
+	}
+
+	for i, entry := range entries {
+		count := processCount(entry, formations)
+
+		num := 1
+		for num <= count {
+			processName := fmt.Sprintf("%s-%d", entry.Name, num)
+			fmt.Println("writing:", app+"-"+processName+".plist")
+
+			config := vars
+			config["command"] = entry.Command
+			config["command_args"] = entry.commandArgs()
+			config["num"] = num
+			config["port"] = strconv.Itoa(portFor(i, num, defaultPort))
+			config["process_name"] = processName
+			config["process_type"] = entry.Name
+			if config["description"] == "" {
+				config["description"] = fmt.Sprintf("%s process for %s", processName, app)
+			}
+
+			f, err := os.Create(location + "/" + app + "-" + processName + ".plist")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
+				return false
+			}
+			defer f.Close()
+
+			if err = s.Execute(f, config); err != nil {
+				fmt.Fprintf(os.Stderr, "error writing output: %s\n", err)
+				return false
+			}
+
+			num += 1
+		}
+	}
+
+	return true
+}
+
 func exportRunit(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
 	run, err := Asset("templates/runit/run.tmpl")
 	if err != nil {

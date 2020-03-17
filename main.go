@@ -25,6 +25,10 @@ type formationEntry struct {
 	Count int
 }
 
+func (p *procfileEntry) commandArgs() []string {
+	return strings.Fields(p.Command)
+}
+
 const portEnvVar = "PORT"
 
 // Version contains the procfile-util version
@@ -299,6 +303,7 @@ func exportCommand(entries []procfileEntry, app string, description string, envP
 		return false
 	}
 	formats := map[string]bool{
+		"launchd":      true,
 		"runit":        true,
 		"systemd":      true,
 		"systemd-user": true,
@@ -356,6 +361,10 @@ func exportCommand(entries []procfileEntry, app string, description string, envP
 	vars["working_directory"] = workingDirectoryPath
 	vars["timeout"] = strconv.Itoa(timeout)
 	vars["user"] = user
+
+	if format == "launchd" {
+		return exportLaunchd(app, entries, formations, location, defaultPort, vars)
+	}
 
 	if format == "runit" {
 		return exportRunit(app, entries, formations, location, defaultPort, vars)
