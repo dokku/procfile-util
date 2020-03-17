@@ -43,6 +43,7 @@ targets = $(addsuffix -in-docker, $(LIST))
 	@echo "VERSION=$(VERSION)" >> .env.docker
 
 build:
+	@go-bindata templates/...
 	@$(MAKE) build/darwin/$(NAME)
 	@$(MAKE) build/linux/$(NAME)
 	@$(MAKE) build/deb/$(NAME)_$(VERSION)_amd64.deb

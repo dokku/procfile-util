@@ -1,0 +1,4 @@
+#!/bin/sh
+cd {{ .working_directory }}
+exec 2>&1
+exec chpst -u {{ .user }} -e {{ .location }}/{{ .app }}-{{ .process_type }}-{{ .num }}/env {{ .command }}

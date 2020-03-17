@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/akamensky/argparse"
@@ -17,6 +18,11 @@ import (
 type procfileEntry struct {
 	Name    string
 	Command string
+}
+
+type formationEntry struct {
+	Name  string
+	Count int
 }
 
 const portEnvVar = "PORT"
@@ -169,13 +175,13 @@ func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	return entries, nil
 }
 
-func expandEnv(e procfileEntry, envPath string, allowEnv bool, defaultPort string) (string, error) {
+func expandEnv(e procfileEntry, envPath string, allowEnv bool, defaultPort int) (string, error) {
 	baseExpandFunc := func(key string) string {
 		if key == "PS" {
 			return os.Getenv("PS")
 		}
 		if key == portEnvVar {
-			return defaultPort
+			return string(defaultPort)
 		}
 		return ""
 	}
@@ -256,7 +262,7 @@ func existsCommand(entries []procfileEntry, processType string) bool {
 	return false
 }
 
-func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort string, delimiter string) bool {
+func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort int, delimiter string) bool {
 	hasErrors := false
 	var expandedEntries []procfileEntry
 	for _, entry := range entries {
@@ -281,6 +287,111 @@ func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, pr
 	}
 
 	return true
+}
+
+func exportCommand(entries []procfileEntry, app string, description string, envPath string, format string, formation string, group string, home string, limitOpenFiles string, location string, logPath string, nice string, workingDirectoryPath string, runPath string, timeout int, user string, defaultPort int) bool {
+	if format == "" {
+		fmt.Fprintf(os.Stderr, "no format specified\n")
+		return false
+	}
+	if location == "" {
+		fmt.Fprintf(os.Stderr, "no output location specified\n")
+		return false
+	}
+	formats := map[string]bool{
+		"runit":        true,
+		"systemd":      true,
+		"systemd-user": true,
+	}
+
+	if _, ok := formats[format]; !ok {
+		fmt.Fprintf(os.Stderr, "invalid format type: %s\n", format)
+		return false
+	}
+
+	formations, err := parseFormation(formation)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return false
+	}
+
+	if user == "" {
+		user = app
+	}
+
+	if group == "" {
+		group = app
+	}
+
+	if home == "" {
+		home = "/home/" + app
+	}
+
+	env := make(map[string]string)
+	if envPath != "" {
+		b, err := ioutil.ReadFile(envPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error reading env file: %s\n", err)
+			return false
+		}
+
+		content := string(b)
+		env, err = godotenv.Unmarshal(content)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error parsing env file: %s\n", err)
+			return false
+		}
+	}
+
+	vars := make(map[string]interface{})
+	vars["app"] = app
+	vars["description"] = description
+	vars["env"] = env
+	vars["group"] = group
+	vars["home"] = home
+	vars["log"] = logPath
+	vars["location"] = location
+	vars["limit_open_files"] = limitOpenFiles
+	vars["nice"] = nice
+	vars["working_directory"] = workingDirectoryPath
+	vars["timeout"] = strconv.Itoa(timeout)
+	vars["user"] = user
+
+	if format == "runit" {
+		return exportRunit(app, entries, formations, location, defaultPort, vars)
+	}
+
+	if format == "systemd" {
+		return exportSystemd(app, entries, formations, location, defaultPort, vars)
+	}
+
+	if format == "systemd-user" {
+		return exportSystemdUser(app, entries, formations, location, defaultPort, vars)
+	}
+
+	return false
+}
+
+func parseFormation(formation string) (map[string]formationEntry, error) {
+	entries := make(map[string]formationEntry)
+	for _, formation := range strings.Split(formation, ",") {
+		parts := strings.Split(formation, "=")
+		if len(parts) != 2 {
+			return entries, fmt.Errorf("invalid formation: %s", formation)
+		}
+
+		i, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return entries, fmt.Errorf("invalid formation: %s", err)
+		}
+
+		entries[parts[0]] = formationEntry{
+			Name:  parts[0],
+			Count: i,
+		}
+	}
+
+	return entries, nil
 }
 
 func deleteCommand(entries []procfileEntry, processType string, writePath string, stdout bool, delimiter string, path string) bool {
@@ -315,7 +426,7 @@ func setCommand(entries []procfileEntry, processType string, command string, wri
 	return outputProcfile(path, writePath, delimiter, stdout, validEntries)
 }
 
-func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort string) bool {
+func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort int) bool {
 	var foundEntry procfileEntry
 	for _, entry := range entries {
 		if processType == entry.Name {
@@ -340,11 +451,17 @@ func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, proc
 }
 
 func main() {
+	workingDirectoryPath, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
+
 	parser := argparse.NewParser("procfile-util", "A procfile parsing tool")
 	loglevelFlag := parser.Selector("l", "loglevel", []string{"info", "debug"}, &argparse.Options{Default: "info", Help: "loglevel to use"})
 	procfileFlag := parser.String("P", "procfile", &argparse.Options{Default: "Procfile", Help: "path to a procfile"})
 	delimiterFlag := parser.String("D", "delimiter", &argparse.Options{Default: ":", Help: "delimiter in use within procfile"})
-	defaultPortFlag := parser.String("d", "default-port", &argparse.Options{Default: "5000", Help: "default port to use"})
+	defaultPortFlag := parser.Int("d", "default-port", &argparse.Options{Default: 5000, Help: "default port to use"})
 	versionFlag := parser.Flag("v", "version", &argparse.Options{Help: "show version"})
 
 	checkCmd := parser.NewCommand("check", "check that the specified procfile is valid")
@@ -362,6 +479,23 @@ func main() {
 	envPathExpandFlag := expandCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
 	processTypeExpandFlag := expandCmd.String("p", "process-type", &argparse.Options{Help: "name of process to expand"})
 
+	exportCmd := parser.NewCommand("export", "export the application to another process management format")
+	appExportFlag := exportCmd.String("", "app", &argparse.Options{Default: "app", Help: "name of app"})
+	descriptionExportFlag := exportCmd.String("", "description", &argparse.Options{Help: "process description"})
+	envPathExportFlag := exportCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
+	formatExportFlag := exportCmd.String("", "format", &argparse.Options{Help: "format to export"})
+	formationExportFlag := exportCmd.String("", "formation", &argparse.Options{Default: "all=1", Help: "specify what processes will run and how many"})
+	groupExportFlag := exportCmd.String("", "group", &argparse.Options{Help: "group to run the command as"})
+	homeExportFlag := exportCmd.String("", "group", &argparse.Options{Help: "home directory for program"})
+	limitOpenFilesExportFlag := exportCmd.String("", "limit-open-files", &argparse.Options{Help: "maximum number of open files, sockets, etc. (setrlimit RLIMIT_NOFILE)"})
+	locationExportFlag := exportCmd.String("", "location", &argparse.Options{Help: "location to output to"})
+	logPathExportFlag := exportCmd.String("", "log-path", &argparse.Options{Default: "/var/log", Help: "log directory"})
+	niceExportFlag := exportCmd.String("", "nice", &argparse.Options{Help: "nice level to add to this program before running"})
+	workingDirectoryPathExportFlag := exportCmd.String("", "working-directory-path", &argparse.Options{Default: workingDirectoryPath, Help: "working directory path for app"})
+	runExportFlag := exportCmd.String("", "run", &argparse.Options{Help: "run pid file directory, defaults to /var/run/<app>"})
+	timeoutExportFlag := exportCmd.Int("", "timeout", &argparse.Options{Default: 5, Help: "amount of time (in seconds) processes have to shutdown gracefully before receiving a SIGKILL"})
+	userExportFlag := exportCmd.String("", "user", &argparse.Options{Help: "user to run the command as"})
+
 	listCmd := parser.NewCommand("list", "list all process types in a procfile")
 
 	setCmd := parser.NewCommand("set", "set the command for a process type in a file")
@@ -375,8 +509,7 @@ func main() {
 	envPathShowFlag := showCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
 	processTypeShowFlag := showCmd.String("p", "process-type", &argparse.Options{Help: "name of process to show", Required: true})
 
-	err := parser.Parse(os.Args)
-	if err != nil {
+	if err = parser.Parse(os.Args); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", parser.Usage(err))
 		os.Exit(1)
 		return
@@ -406,6 +539,8 @@ func main() {
 		success = existsCommand(entries, *processTypeExistsFlag)
 	} else if expandCmd.Happened() {
 		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag, *defaultPortFlag, *delimiterFlag)
+	} else if exportCmd.Happened() {
+		success = exportCommand(entries, *appExportFlag, *descriptionExportFlag, *envPathExportFlag, *formatExportFlag, *formationExportFlag, *groupExportFlag, *homeExportFlag, *limitOpenFilesExportFlag, *locationExportFlag, *logPathExportFlag, *niceExportFlag, *workingDirectoryPathExportFlag, *runExportFlag, *timeoutExportFlag, *userExportFlag, *defaultPortFlag)
 	} else if listCmd.Happened() {
 		success = listCommand(entries)
 	} else if setCmd.Happened() {
