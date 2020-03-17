@@ -197,7 +197,7 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 }
 
 func exportSystemd(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
-	target, err := Asset("templates/systemd/default/master.target.tmpl")
+	target, err := Asset("templates/systemd/default/control.target.tmpl")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		return false
