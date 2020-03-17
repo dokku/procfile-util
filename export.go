@@ -32,17 +32,8 @@ func exportLaunchd(app string, entries []procfileEntry, formations map[string]fo
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			fmt.Println("writing:", app+"-"+processName+".plist")
 
-			config := vars
-			config["command"] = entry.Command
-			config["command_args"] = entry.commandArgs()
-			config["num"] = num
-			config["port"] = strconv.Itoa(portFor(i, num, defaultPort))
-			config["process_name"] = processName
-			config["process_type"] = entry.Name
-			config["ps"] = app + "-" + entry.Name + "." + num
-			if config["description"] == "" {
-				config["description"] = fmt.Sprintf("%s process for %s", processName, app)
-			}
+			port := portFor(i, num, defaultPort)
+			config := templateVars(app, entry, processName, num, port, vars)
 
 			f, err := os.Create(location + "/" + app + "-" + processName + ".plist")
 			if err != nil {
@@ -111,18 +102,7 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 			os.MkdirAll(folderPath+"/log", os.ModePerm)
 
 			port := portFor(i, num, defaultPort)
-
-			config := vars
-			config["command"] = entry.Command
-			config["command_args"] = entry.commandArgs()
-			config["num"] = num
-			config["port"] = port
-			config["process_name"] = processName
-			config["process_type"] = entry.Name
-			config["ps"] = app + "-" + entry.Name + "." + num
-			if config["description"] == "" {
-				config["description"] = fmt.Sprintf("%s process for %s", processName, app)
-			}
+			config := templateVars(app, entry, processName, num, port, vars)
 
 			fmt.Println("writing:", app+"-"+processName+"/run")
 			f, err := os.Create(folderPath + "/run")
@@ -238,17 +218,8 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 			processes = append(processes, fmt.Sprintf(app+"-%s.service", fileName))
 			fmt.Println("writing:", app+"-"+fileName+".service")
 
-			config := vars
-			config["command"] = entry.Command
-			config["command_args"] = entry.commandArgs()
-			config["num"] = num
-			config["port"] = portFor(i, num, defaultPort)
-			config["process_name"] = processName
-			config["process_type"] = entry.Name
-			config["ps"] = app + "-" + entry.Name + "." + num
-			if config["description"] == "" {
-				config["description"] = fmt.Sprintf("%s process for %s", processName, app)
-			}
+			port := portFor(i, num, defaultPort)
+			config := templateVars(app, entry, processName, num, port, vars)
 
 			f, err := os.Create(location + "/" + app + "-" + fileName + ".service")
 			if err != nil {
@@ -311,16 +282,8 @@ func exportSystemdUser(app string, entries []procfileEntry, formations map[strin
 			processes = append(processes, fmt.Sprintf("%s.service", processName))
 			fmt.Println("writing:", app+"-"+processName+".service")
 
-			config := vars
-			config["command"] = entry.Command
-			config["num"] = num
-			config["port"] = portFor(i, num, defaultPort)
-			config["process_name"] = processName
-			config["process_type"] = entry.Name
-			config["ps"] = app + "-" + entry.Name + "." + num
-			if config["description"] == "" {
-				config["description"] = fmt.Sprintf("%s process for %s", processName, app)
-			}
+			port := portFor(i, num, defaultPort)
+			config := templateVars(app, entry, processName, num, port, vars)
 
 			f, err := os.Create(location + "/" + app + "-" + processName + ".service")
 			if err != nil {
@@ -354,4 +317,20 @@ func processCount(entry procfileEntry, formations map[string]formationEntry) int
 
 func portFor(processIndex int, instance int, base int) int {
 	return 5000 + (processIndex * 100) + (instance - 1)
+}
+
+func templateVars(app string, entry procfileEntry, processName string, num int, port int, vars map[string]interface{}) map[string]interface{} {
+	config := vars
+	config["command"] = entry.Command
+	config["command_args"] = entry.commandArgs()
+	config["num"] = num
+	config["port"] = strconv.Itoa(port)
+	config["process_name"] = processName
+	config["process_type"] = entry.Name
+	config["ps"] = app + "-" + entry.Name + "." + num
+	if config["description"] == "" {
+		config["description"] = fmt.Sprintf("%s process for %s", processName, app)
+	}
+
+	return config
 }
