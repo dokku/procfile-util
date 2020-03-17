@@ -324,10 +324,10 @@ func templateVars(app string, entry procfileEntry, processName string, num int, 
 	config["command"] = entry.Command
 	config["command_args"] = entry.commandArgs()
 	config["num"] = num
-	config["port"] = strconv.Itoa(port)
+	config["port"] = port
 	config["process_name"] = processName
 	config["process_type"] = entry.Name
-	config["ps"] = app + "-" + entry.Name + "." + num
+	config["ps"] = app + "-" + entry.Name + "." + strconv.Itoa(num)
 	if config["description"] == "" {
 		config["description"] = fmt.Sprintf("%s process for %s", processName, app)
 	}
