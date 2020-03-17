@@ -8,7 +8,7 @@ import (
 )
 
 func exportLaunchd(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
-	s, err := loadTemplate("launchd", "templates/launchd/launchd.plist.tmpl")
+	l, err := loadTemplate("launchd", "templates/launchd/launchd.plist.tmpl")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return false
@@ -28,7 +28,7 @@ func exportLaunchd(app string, entries []procfileEntry, formations map[string]fo
 
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if !writeOutput(s, location+"/"+app+"-"+processName+".plist", config) {
+			if !writeOutput(l, location+"/"+app+"-"+processName+".plist", config) {
 				return false
 			}
 
