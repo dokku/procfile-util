@@ -25,7 +25,7 @@ type formationEntry struct {
 	Count int
 }
 
-func (p *procfileEntry) commandArgs() []string {
+func (p *procfileEntry) commandList() []string {
 	return strings.Fields(p.Command)
 }
 

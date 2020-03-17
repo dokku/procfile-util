@@ -269,7 +269,7 @@ func portFor(processIndex int, instance int, base int) int {
 func templateVars(app string, entry procfileEntry, processName string, num int, port int, vars map[string]interface{}) map[string]interface{} {
 	config := vars
 	config["command"] = entry.Command
-	config["command_args"] = entry.commandArgs()
+	config["command_list"] = entry.commandList()
 	config["num"] = num
 	config["port"] = port
 	config["process_name"] = processName

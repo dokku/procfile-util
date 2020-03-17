@@ -16,7 +16,7 @@
     </dict>
     <key>ProgramArguments</key>
     <array>
-    {{- range $command := .command_args }}
+    {{- range $command := .command_list }}
         <string>{{ if eq $command "$PORT" }}{{ $.port }}{{ else }}{{ $command }}{{ end }}</string>{{ end }}
     </array>
     <key>KeepAlive</key>
