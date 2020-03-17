@@ -8,15 +8,9 @@ import (
 )
 
 func exportLaunchd(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
-	service, err := Asset("templates/launchd/launchd.plist.tmpl")
+	s, err := loadTemplate("launchd", "templates/launchd/launchd.plist.tmpl")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
-		return false
-	}
-
-	s, err := template.New("service").Parse(string(service))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error parsing template: %s\n", err)
+		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return false
 	}
 
@@ -34,16 +28,7 @@ func exportLaunchd(app string, entries []procfileEntry, formations map[string]fo
 
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-
-			f, err := os.Create(location + "/" + app + "-" + processName + ".plist")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
-				return false
-			}
-			defer f.Close()
-
-			if err = s.Execute(f, config); err != nil {
-				fmt.Fprintf(os.Stderr, "error writing output: %s\n", err)
+			if !writeOutput(s, location+"/"+app+"-"+processName+".plist", config) {
 				return false
 			}
 
@@ -55,27 +40,14 @@ func exportLaunchd(app string, entries []procfileEntry, formations map[string]fo
 }
 
 func exportRunit(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
-	run, err := Asset("templates/runit/run.tmpl")
+	r, err := loadTemplate("run", "templates/runit/run.tmpl")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return false
 	}
-
-	log, err := Asset("templates/runit/log/run.tmpl")
+	l, err := loadTemplate("log", "templates/runit/log/run.tmpl")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
-		return false
-	}
-
-	r, err := template.New("run").Parse(string(run))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error parsing template: %s\n", err)
-		return false
-	}
-
-	l, err := template.New("log").Parse(string(log))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error parsing template: %s\n", err)
+		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return false
 	}
 
@@ -105,21 +77,7 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 			config := templateVars(app, entry, processName, num, port, vars)
 
 			fmt.Println("writing:", app+"-"+processName+"/run")
-			f, err := os.Create(folderPath + "/run")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
-				return false
-			}
-			defer f.Close()
-
-			if err = r.Execute(f, config); err != nil {
-				fmt.Fprintf(os.Stderr, "error writing output: %s\n", err)
-				return false
-			}
-
-			fmt.Println("setting", app+"-"+processName+"/run", "to mode 755")
-			if err := os.Chmod(folderPath+"/run", 0755); err != nil {
-				fmt.Fprintf(os.Stderr, "error setting mode: %s\n", err)
+			if !writeOutput(r, folderPath+"/run", config) {
 				return false
 			}
 
@@ -134,7 +92,7 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 
 			for key, value := range env {
 				fmt.Println("writing:", app+"-"+processName+"/env/"+key)
-				f, err = os.Create(folderPath + "/env/" + key)
+				f, err := os.Create(folderPath + "/env/" + key)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
 					return false
@@ -153,21 +111,7 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 			}
 
 			fmt.Println("writing:", app+"-"+processName+"/log/run")
-			f, err = os.Create(folderPath + "/log/run")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
-				return false
-			}
-			defer f.Close()
-
-			if err = l.Execute(f, config); err != nil {
-				fmt.Fprintf(os.Stderr, "error writing output: %s\n", err)
-				return false
-			}
-
-			fmt.Println("setting", app+"-"+processName+"/log/run", "to mode 755")
-			if err := os.Chmod(folderPath+"/log/run", 0755); err != nil {
-				fmt.Fprintf(os.Stderr, "error setting mode: %s\n", err)
+			if !writeOutput(l, folderPath+"/log/run", config) {
 				return false
 			}
 
@@ -179,27 +123,15 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 }
 
 func exportSystemd(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
-	target, err := Asset("templates/systemd/default/control.target.tmpl")
+	t, err := loadTemplate("target", "templates/systemd/default/control.target.tmpl")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return false
 	}
 
-	service, err := Asset("templates/systemd/default/program.service.tmpl")
+	s, err := loadTemplate("service", "templates/systemd/default/program.service.tmpl")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
-		return false
-	}
-
-	t, err := template.New("target").Parse(string(target))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error parsing template: %s\n", err)
-		return false
-	}
-
-	s, err := template.New("service").Parse(string(service))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error parsing template: %s\n", err)
+		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return false
 	}
 
@@ -220,16 +152,7 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-
-			f, err := os.Create(location + "/" + app + "-" + fileName + ".service")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
-				return false
-			}
-			defer f.Close()
-
-			if err = s.Execute(f, config); err != nil {
-				fmt.Fprintf(os.Stderr, "error writing output: %s\n", err)
+			if !writeOutput(s, location+"/"+app+"-"+fileName+".service", config) {
 				return false
 			}
 
@@ -240,31 +163,13 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 	config := vars
 	config["processes"] = processes
 	fmt.Println("writing:", app+".target")
-	f, err := os.Create(location + "/" + app + ".target")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
-		return false
-	}
-	defer f.Close()
-
-	if err = t.Execute(f, config); err != nil {
-		fmt.Fprintf(os.Stderr, "error writing output: %s\n", err)
-		return false
-	}
-
-	return true
+	return writeOutput(t, location+"/"+app+".target", config)
 }
 
 func exportSystemdUser(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
-	service, err := Asset("templates/systemd-user/default/program.service.tmpl")
+	s, err := loadTemplate("service", "templates/systemd-user/default/program.service.tmpl")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
-		return false
-	}
-
-	s, err := template.New("service").Parse(string(service))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error parsing template: %s\n", err)
+		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return false
 	}
 
@@ -284,16 +189,7 @@ func exportSystemdUser(app string, entries []procfileEntry, formations map[strin
 
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-
-			f, err := os.Create(location + "/" + app + "-" + processName + ".service")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
-				return false
-			}
-			defer f.Close()
-
-			if err = s.Execute(f, config); err != nil {
-				fmt.Fprintf(os.Stderr, "error writing output: %s\n", err)
+			if !writeOutput(s, location+"/"+app+"-"+processName+".service", config) {
 				return false
 			}
 
@@ -333,4 +229,39 @@ func templateVars(app string, entry procfileEntry, processName string, num int, 
 	}
 
 	return config
+}
+
+func writeOutput(t *template.Template, outputPath string, variables map[string]interface{}) bool {
+	f, err := os.Create(outputPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
+		return false
+	}
+	defer f.Close()
+
+	if err = t.Execute(f, variables); err != nil {
+		fmt.Fprintf(os.Stderr, "error writing output: %s\n", err)
+		return false
+	}
+
+	if err := os.Chmod(outputPath, 0755); err != nil {
+		fmt.Fprintf(os.Stderr, "error setting mode: %s\n", err)
+		return false
+	}
+
+	return true
+}
+
+func loadTemplate(name string, filename string) (*template.Template, error) {
+	asset, err := Asset(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	t, err := template.New(name).Parse(string(asset))
+	if err != nil {
+		return nil, fmt.Errorf("error parsing template: %s", err)
+	}
+
+	return t, nil
 }
