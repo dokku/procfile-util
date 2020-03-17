@@ -75,6 +75,30 @@ procfile-util expand --allow-getenv --env-file .env
 procfile-util expand --allow-getenv --env-file .env --default-port 3000
 ```
 
+### export
+
+> export the application to another process management format
+
+Due to argument parsing limitations, the `--location` flag is currently required.
+
+In addition, not all formats support all arguments, and not all arguments have examples below.
+
+```shell
+# export systemd init files to the `tmp` directory
+# support formats include: [launchd, runit, systemd, systemd-user, upstart]
+# the default format is: systemd
+procfile-util export --format systemd --location tmpp
+
+# override the app name
+procfile-util export --location tmp --app node-js-app
+
+# set the group and user used to launch processes
+procfile-util export --location tmp --group root --user root
+
+# set a working directory path for the process
+procfile-util export --location tmp --working-directory /root
+```
+
 ### list
 
 > list all process types in a procfile

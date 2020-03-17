@@ -1,0 +1,20 @@
+[Unit]
+{{- if .description }}
+Description={{ .description }}{{ end }}
+ 
+[Service]
+WorkingDirectory={{ .working_directory }}
+Type=simple
+Environment=PORT={{ .port }}
+Environment=PS={{ .ps }}
+EnvironmentFile=-{{ .home }}/.config/systemd/user/{{ .ps }}.environment
+ExecStart={{ .command }}
+Restart=always
+RestartSec=14s
+StandardInput=null
+StandardOutput={{ .log }}/{{ .app }}/{{ .process_type }}-{{ .num }}-stdout.log
+StandardError={{ .log }}/{{ .app }}/{{ .process_type }}-{{ .num }}-stderr.log
+SyslogIdentifier=%n
+
+[Install]
+WantedBy=multi-user.target

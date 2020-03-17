@@ -42,7 +42,7 @@ targets = $(addsuffix -in-docker, $(LIST))
 	@echo "PACKAGECLOUD_TOKEN=$(PACKAGECLOUD_TOKEN)" >> .env.docker
 	@echo "VERSION=$(VERSION)" >> .env.docker
 
-build:
+build: prebuild
 	@$(MAKE) build/darwin/$(NAME)
 	@$(MAKE) build/linux/$(NAME)
 	@$(MAKE) build/deb/$(NAME)_$(VERSION)_amd64.deb
@@ -170,3 +170,7 @@ validate:
 	ls -lah build/deb build/rpm validation
 	sha1sum build/deb/$(NAME)_$(VERSION)_amd64.deb
 	sha1sum build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm
+
+prebuild:
+	go get -u github.com/go-bindata/go-bindata/...
+	go-bindata templates/...

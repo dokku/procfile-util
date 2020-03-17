@@ -1,0 +1,29 @@
+description {{ .app }}-{{ .process_type }}-{{ .num }}
+
+start on (starting {{ .app }}-{{ .process_type }} or starting {{ .app }})
+stop on (stopping {{ .app }}-{{ .process_type }} or stopping {{ .app }})
+
+setuid {{ .user }}
+setgid {{ .group }}
+chdir  {{ .working_directory }}
+respawn
+
+script
+  export PORT={{ .port }}
+  export PS={{ .ps }}
+  [ -r /etc/default/{{ .app  }} ] && . /etc/default/{{ .app  }}
+  [ -r /etc/sysconfig/{{ .app }} ] && . /etc/sysconfig/{{ .app }}
+  cd {{ .working_directory }}
+  exec {{ .command }} \
+    >> {{ .log }}/{{ .app }}/{{ .process_type }}-{{ .num }}-stdout.log \
+    2>> {{ .log }}/{{ .app }}/{{ .process_type }}-{{ .num }}-stderr.log
+end script
+
+post-start script
+  PID=`status {{ .app }}-{{ .process_type }}-{{ .num }} | egrep -oi '([0-9]+)$' | head -n1`
+  echo $PID > /var/run/{{ .app }}/{{ .app }}-{{ .process_type }}-{{ .num }}.pid
+end script
+
+post-stop script
+  rm -f /var/run/{{ .app }}/{{ .app }}-{{ .process_type }}-{{ .num }}.pid
+end script

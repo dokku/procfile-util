@@ -1,0 +1,5 @@
+[Unit]
+Wants={{ range $value := .processes }}{{ $value }} {{ end }}
+
+[Install]
+WantedBy=multi-user.target
