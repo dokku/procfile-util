@@ -19,9 +19,9 @@ func exportLaunchd(app string, entries []procfileEntry, formations map[string]fo
 	}
 
 	for i, entry := range entries {
+		num := 1
 		count := processCount(entry, formations)
 
-		num := 1
 		for num <= count {
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			fmt.Println("writing:", app+"-"+processName+".plist")
@@ -56,9 +56,9 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 	}
 
 	for i, entry := range entries {
+		num := 1
 		count := processCount(entry, formations)
 
-		num := 1
 		for num <= count {
 			processDirectory := fmt.Sprintf("%s-%s-%d", app, entry.Name, num)
 			folderPath := location + "/" + processDirectory
@@ -141,9 +141,9 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 
 	processes := []string{}
 	for i, entry := range entries {
+		num := 1
 		count := processCount(entry, formations)
 
-		num := 1
 		for num <= count {
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			fileName := fmt.Sprintf("%s.%d", entry.Name, num)
@@ -179,9 +179,9 @@ func exportSystemdUser(app string, entries []procfileEntry, formations map[strin
 
 	processes := []string{}
 	for i, entry := range entries {
+		num := 1
 		count := processCount(entry, formations)
 
-		num := 1
 		for num <= count {
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			processes = append(processes, fmt.Sprintf("%s.service", processName))
