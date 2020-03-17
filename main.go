@@ -13,6 +13,7 @@ import (
 	"github.com/akamensky/argparse"
 	"github.com/andrew-d/go-termutil"
 	"github.com/joho/godotenv"
+	"gopkg.in/alessio/shellescape.v1"
 )
 
 type procfileEntry struct {
@@ -27,6 +28,14 @@ type formationEntry struct {
 
 func (p *procfileEntry) commandList() []string {
 	return strings.Fields(p.Command)
+}
+
+func (p *procfileEntry) program() string {
+	return strings.Fields(p.Command)[0]
+}
+
+func (p *procfileEntry) args() string {
+	return shellescape.Quote(strings.Join(strings.Fields(p.Command)[1:], " "))
 }
 
 const portEnvVar = "PORT"
@@ -293,7 +302,7 @@ func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, pr
 	return true
 }
 
-func exportCommand(entries []procfileEntry, app string, description string, envPath string, format string, formation string, group string, home string, limitOpenFiles string, location string, logPath string, nice string, workingDirectoryPath string, runPath string, timeout int, user string, defaultPort int) bool {
+func exportCommand(entries []procfileEntry, app string, description string, envPath string, format string, formation string, group string, home string, limitCoredump string, limitCputime string, limitData string, limitFileSize string, limitLockedMemory string, limitOpenFiles string, limitUserProcesses string, limitPhysicalMemory string, limitStackSize string, location string, logPath string, nice string, prestart string, workingDirectoryPath string, runPath string, timeout int, user string, defaultPort int) bool {
 	if format == "" {
 		fmt.Fprintf(os.Stderr, "no format specified\n")
 		return false
@@ -307,6 +316,7 @@ func exportCommand(entries []procfileEntry, app string, description string, envP
 		"runit":        true,
 		"systemd":      true,
 		"systemd-user": true,
+		"sysv":         true,
 		"upstart":      true,
 	}
 
@@ -357,10 +367,20 @@ func exportCommand(entries []procfileEntry, app string, description string, envP
 	vars["home"] = home
 	vars["log"] = logPath
 	vars["location"] = location
+	vars["limit_coredump"] = limitCoredump
+	vars["limit_cputime"] = limitCputime
+	vars["limit_data"] = limitData
+	vars["limit_file_size"] = limitFileSize
+	vars["limit_locked_memory"] = limitLockedMemory
 	vars["limit_open_files"] = limitOpenFiles
+	vars["limit_user_processes"] = limitUserProcesses
+	vars["limit_physical_memory"] = limitPhysicalMemory
+	vars["limit_stack_size"] = limitStackSize
 	vars["nice"] = nice
+	vars["prestart"] = prestart
 	vars["working_directory"] = workingDirectoryPath
 	vars["timeout"] = strconv.Itoa(timeout)
+	vars["ulimit_shell"] = ulimitShell(limitCoredump, limitCputime, limitData, limitFileSize, limitLockedMemory, limitOpenFiles, limitUserProcesses, limitPhysicalMemory, limitStackSize)
 	vars["user"] = user
 
 	if format == "launchd" {
@@ -379,11 +399,48 @@ func exportCommand(entries []procfileEntry, app string, description string, envP
 		return exportSystemdUser(app, entries, formations, location, defaultPort, vars)
 	}
 
+	if format == "sysv" {
+		return exportSysv(app, entries, formations, location, defaultPort, vars)
+	}
+
 	if format == "upstart" {
 		return exportUpstart(app, entries, formations, location, defaultPort, vars)
 	}
 
 	return false
+}
+
+func ulimitShell(limitCoredump string, limitCputime string, limitData string, limitFileSize string, limitLockedMemory string, limitOpenFiles string, limitUserProcesses string, limitPhysicalMemory string, limitStackSize string) string {
+	s := []string{}
+	if limitCoredump != "" {
+		s = append(s, "ulimit -c ${limit_coredump}")
+	}
+	if limitCputime != "" {
+		s = append(s, "ulimit -t ${limit_cputime}")
+	}
+	if limitData != "" {
+		s = append(s, "ulimit -d ${limit_data}")
+	}
+	if limitFileSize != "" {
+		s = append(s, "ulimit -f ${limit_file_size}")
+	}
+	if limitLockedMemory != "" {
+		s = append(s, "ulimit -l ${limit_locked_memory}")
+	}
+	if limitOpenFiles != "" {
+		s = append(s, "ulimit -n ${limit_open_files}")
+	}
+	if limitUserProcesses != "" {
+		s = append(s, "ulimit -u ${limit_user_processes}")
+	}
+	if limitPhysicalMemory != "" {
+		s = append(s, "ulimit -m ${limit_physical_memory}")
+	}
+	if limitStackSize != "" {
+		s = append(s, "ulimit -s ${limit_stack_size}")
+	}
+
+	return strings.Join(s, "\n")
 }
 
 func parseFormation(formation string) (map[string]formationEntry, error) {
@@ -501,10 +558,19 @@ func main() {
 	formationExportFlag := exportCmd.String("", "formation", &argparse.Options{Default: "all=1", Help: "specify what processes will run and how many"})
 	groupExportFlag := exportCmd.String("", "group", &argparse.Options{Help: "group to run the command as"})
 	homeExportFlag := exportCmd.String("", "group", &argparse.Options{Help: "home directory for program"})
+	limitCoredumpExportFlag := exportCmd.String("", "limit-coredump", &argparse.Options{Help: "Largest size (in blocks) of a core file that can be created. (setrlimit RLIMIT_CORE)"})
+	limitCputimeExportFlag := exportCmd.String("", "limit-cputime", &argparse.Options{Help: "Maximum amount of cpu time (in seconds) a program may use. (setrlimit RLIMIT_CPU)"})
+	limitDataExportFlag := exportCmd.String("", "limit-data", &argparse.Options{Help: "Maximum data segment size (setrlimit RLIMIT_DATA)"})
+	limitFileSizeExportFlag := exportCmd.String("", "limit-file-size", &argparse.Options{Help: "Maximum size (in blocks) of a file receiving writes (setrlimit RLIMIT_FSIZE)"})
+	limitLockedMemoryExportFlag := exportCmd.String("", "limit-locked-memory", &argparse.Options{Help: "Maximum amount of memory (in bytes) lockable with mlock(2) (setrlimit RLIMIT_MEMLOCK)"})
 	limitOpenFilesExportFlag := exportCmd.String("", "limit-open-files", &argparse.Options{Help: "maximum number of open files, sockets, etc. (setrlimit RLIMIT_NOFILE)"})
+	limitUserProcessesExportFlag := exportCmd.String("", "limit-user-processes", &argparse.Options{Help: "Maximum number of running processes (or threads!) for this user id. Not recommended because this setting applies to the user, not the process group. (setrlimit RLIMIT_NPROC)"})
+	limitPhysicalMemoryExportFlag := exportCmd.String("", "limit-physical-memory", &argparse.Options{Help: "Maximum resident set size (in bytes); the amount of physical memory used by a process. (setrlimit RLIMIT_RSS)"})
+	limitStackSizeExportFlag := exportCmd.String("", "limit-stack-size", &argparse.Options{Help: "Maximum size (in bytes) of a stack segment (setrlimit RLIMIT_STACK)"})
 	locationExportFlag := exportCmd.String("", "location", &argparse.Options{Help: "location to output to"})
 	logPathExportFlag := exportCmd.String("", "log-path", &argparse.Options{Default: "/var/log", Help: "log directory"})
 	niceExportFlag := exportCmd.String("", "nice", &argparse.Options{Help: "nice level to add to this program before running"})
+	prestartExportFlag := exportCmd.String("", "prestart", &argparse.Options{Help: "A command to execute before starting and restarting. A failure of this command will cause the start/restart to abort. This is useful for health checks, config tests, or similar operations."})
 	workingDirectoryPathExportFlag := exportCmd.String("", "working-directory-path", &argparse.Options{Default: workingDirectoryPath, Help: "working directory path for app"})
 	runExportFlag := exportCmd.String("", "run", &argparse.Options{Help: "run pid file directory, defaults to /var/run/<app>"})
 	timeoutExportFlag := exportCmd.Int("", "timeout", &argparse.Options{Default: 5, Help: "amount of time (in seconds) processes have to shutdown gracefully before receiving a SIGKILL"})
@@ -554,7 +620,7 @@ func main() {
 	} else if expandCmd.Happened() {
 		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag, *defaultPortFlag, *delimiterFlag)
 	} else if exportCmd.Happened() {
-		success = exportCommand(entries, *appExportFlag, *descriptionExportFlag, *envPathExportFlag, *formatExportFlag, *formationExportFlag, *groupExportFlag, *homeExportFlag, *limitOpenFilesExportFlag, *locationExportFlag, *logPathExportFlag, *niceExportFlag, *workingDirectoryPathExportFlag, *runExportFlag, *timeoutExportFlag, *userExportFlag, *defaultPortFlag)
+		success = exportCommand(entries, *appExportFlag, *descriptionExportFlag, *envPathExportFlag, *formatExportFlag, *formationExportFlag, *groupExportFlag, *homeExportFlag, *limitCoredumpExportFlag, *limitCputimeExportFlag, *limitDataExportFlag, *limitFileSizeExportFlag, *limitLockedMemoryExportFlag, *limitOpenFilesExportFlag, *limitUserProcessesExportFlag, *limitPhysicalMemoryExportFlag, *limitStackSizeExportFlag, *locationExportFlag, *logPathExportFlag, *niceExportFlag, *prestartExportFlag, *workingDirectoryPathExportFlag, *runExportFlag, *timeoutExportFlag, *userExportFlag, *defaultPortFlag)
 	} else if listCmd.Happened() {
 		success = listCommand(entries)
 	} else if setCmd.Happened() {

@@ -198,6 +198,37 @@ func exportSystemdUser(app string, entries []procfileEntry, formations map[strin
 	return true
 }
 
+func exportSysv(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
+	l, err := loadTemplate("launchd", "templates/sysv/default/init.sh.tmpl")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return false
+	}
+
+	if _, err := os.Stat(location); os.IsNotExist(err) {
+		os.MkdirAll(location, os.ModePerm)
+	}
+
+	for i, entry := range entries {
+		num := 1
+		count := processCount(entry, formations)
+
+		for num <= count {
+			processName := fmt.Sprintf("%s-%d", entry.Name, num)
+			fmt.Println("writing:", app+"-"+processName)
+
+			port := portFor(i, num, defaultPort)
+			config := templateVars(app, entry, processName, num, port, vars)
+			if !writeOutput(l, location+"/"+app+"-"+processName, config) {
+				return false
+			}
+
+			num += 1
+		}
+	}
+
+	return true
+}
 func exportUpstart(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
 	p, err := loadTemplate("program", "templates/upstart/default/program.conf.tmpl")
 	if err != nil {
@@ -268,12 +299,14 @@ func portFor(processIndex int, instance int, base int) int {
 
 func templateVars(app string, entry procfileEntry, processName string, num int, port int, vars map[string]interface{}) map[string]interface{} {
 	config := vars
+	config["args"] = entry.args()
 	config["command"] = entry.Command
 	config["command_list"] = entry.commandList()
 	config["num"] = num
 	config["port"] = port
 	config["process_name"] = processName
 	config["process_type"] = entry.Name
+	config["program"] = entry.program()
 	config["ps"] = app + "-" + entry.Name + "." + strconv.Itoa(num)
 	if config["description"] == "" {
 		config["description"] = fmt.Sprintf("%s process for %s", processName, app)
