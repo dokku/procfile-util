@@ -85,7 +85,7 @@ In addition, not all formats support all arguments, and not all arguments have e
 
 ```shell
 # export systemd init files to the `tmp` directory
-# support formats include: [launchd, runit, systemd, systemd-user]
+# support formats include: [launchd, runit, systemd, systemd-user, upstart]
 # the default format is: systemd
 procfile-util export --format systemd --location tmpp
 
