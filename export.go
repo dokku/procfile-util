@@ -39,6 +39,7 @@ func exportLaunchd(app string, entries []procfileEntry, formations map[string]fo
 			config["port"] = strconv.Itoa(portFor(i, num, defaultPort))
 			config["process_name"] = processName
 			config["process_type"] = entry.Name
+			config["ps"] = app + "-" + entry.Name + "." + num
 			if config["description"] == "" {
 				config["description"] = fmt.Sprintf("%s process for %s", processName, app)
 			}
@@ -118,6 +119,7 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 			config["port"] = port
 			config["process_name"] = processName
 			config["process_type"] = entry.Name
+			config["ps"] = app + "-" + entry.Name + "." + num
 			if config["description"] == "" {
 				config["description"] = fmt.Sprintf("%s process for %s", processName, app)
 			}
@@ -243,6 +245,7 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 			config["port"] = portFor(i, num, defaultPort)
 			config["process_name"] = processName
 			config["process_type"] = entry.Name
+			config["ps"] = app + "-" + entry.Name + "." + num
 			if config["description"] == "" {
 				config["description"] = fmt.Sprintf("%s process for %s", processName, app)
 			}
@@ -314,6 +317,7 @@ func exportSystemdUser(app string, entries []procfileEntry, formations map[strin
 			config["port"] = portFor(i, num, defaultPort)
 			config["process_name"] = processName
 			config["process_type"] = entry.Name
+			config["ps"] = app + "-" + entry.Name + "." + num
 			if config["description"] == "" {
 				config["description"] = fmt.Sprintf("%s process for %s", processName, app)
 			}
