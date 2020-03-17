@@ -177,14 +177,12 @@ func exportSystemdUser(app string, entries []procfileEntry, formations map[strin
 		os.MkdirAll(location, os.ModePerm)
 	}
 
-	processes := []string{}
 	for i, entry := range entries {
 		num := 1
 		count := processCount(entry, formations)
 
 		for num <= count {
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
-			processes = append(processes, fmt.Sprintf("%s.service", processName))
 			fmt.Println("writing:", app+"-"+processName+".service")
 
 			port := portFor(i, num, defaultPort)
