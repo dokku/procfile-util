@@ -31,5 +31,7 @@
     <string>{{ .user }}</string>
     <key>WorkingDirectory</key>
     <string>{{ .working_directory }}</string>
+    {{- if .nice }}
+    <key>Nice</key><integer>{{ .nice }}</integer>{{ end }}
 </dict>
 </plist>
