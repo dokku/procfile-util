@@ -24,8 +24,6 @@ func exportLaunchd(app string, entries []procfileEntry, formations map[string]fo
 
 		for num <= count {
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
-			fmt.Println("writing:", app+"-"+processName+".plist")
-
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
 			if !writeOutput(l, location+"/"+app+"-"+processName+".plist", config) {
@@ -76,7 +74,6 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
 
-			fmt.Println("writing:", app+"-"+processName+"/run")
 			if !writeOutput(r, folderPath+"/run", config) {
 				return false
 			}
@@ -110,7 +107,6 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 				}
 			}
 
-			fmt.Println("writing:", app+"-"+processName+"/log/run")
 			if !writeOutput(l, folderPath+"/log/run", config) {
 				return false
 			}
@@ -148,7 +144,6 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			fileName := fmt.Sprintf("%s.%d", entry.Name, num)
 			processes = append(processes, fmt.Sprintf(app+"-%s.service", fileName))
-			fmt.Println("writing:", app+"-"+fileName+".service")
 
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
@@ -162,7 +157,6 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 
 	config := vars
 	config["processes"] = processes
-	fmt.Println("writing:", app+".target")
 	if writeOutput(t, location+"/"+app+".target", config) {
 		fmt.Println("You will want to run 'systemctl --system daemon-reload' to activate the service on the target host")
 		return true
@@ -188,8 +182,6 @@ func exportSystemdUser(app string, entries []procfileEntry, formations map[strin
 
 		for num <= count {
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
-			fmt.Println("writing:", app+"-"+processName+".service")
-
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
 			if !writeOutput(s, location+"/"+app+"-"+processName+".service", config) {
@@ -221,8 +213,6 @@ func exportSysv(app string, entries []procfileEntry, formations map[string]forma
 
 		for num <= count {
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
-			fmt.Println("writing:", app+"-"+processName)
-
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
 			if !writeOutput(l, location+"/"+app+"-"+processName, config) {
@@ -264,7 +254,6 @@ func exportUpstart(app string, entries []procfileEntry, formations map[string]fo
 
 		variables := vars
 		variables["process_type"] = entry.Name
-		fmt.Println("writing:", app+"-"+entry.Name+".conf")
 		if !writeOutput(t, location+"/"+app+"-"+entry.Name+".conf", variables) {
 			return false
 		}
@@ -272,8 +261,6 @@ func exportUpstart(app string, entries []procfileEntry, formations map[string]fo
 		for num <= count {
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			fileName := fmt.Sprintf("%s-%d", entry.Name, num)
-			fmt.Println("writing:", app+"-"+fileName+".conf")
-
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
 			if !writeOutput(p, location+"/"+app+"-"+fileName+".conf", config) {
@@ -285,7 +272,6 @@ func exportUpstart(app string, entries []procfileEntry, formations map[string]fo
 	}
 
 	config := vars
-	fmt.Println("writing:", app+".conf")
 	return writeOutput(c, location+"/"+app+".conf", config)
 }
 func processCount(entry procfileEntry, formations map[string]formationEntry) int {
@@ -323,6 +309,7 @@ func templateVars(app string, entry procfileEntry, processName string, num int, 
 }
 
 func writeOutput(t *template.Template, outputPath string, variables map[string]interface{}) bool {
+	fmt.Println("writing:", outputPath)
 	f, err := os.Create(outputPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
