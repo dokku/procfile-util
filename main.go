@@ -321,7 +321,7 @@ func exportCommand(entries []procfileEntry, app string, description string, envP
 
 	formats := map[string]exportFunc{
 		"launchd":      exportLaunchd,
-		"runt":         exportRunit,
+		"runit":        exportRunit,
 		"systemd":      exportSystemd,
 		"systemd-user": exportSystemdUser,
 		"sysv":         exportSysv,
