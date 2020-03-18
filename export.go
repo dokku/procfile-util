@@ -163,7 +163,12 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 	config := vars
 	config["processes"] = processes
 	fmt.Println("writing:", app+".target")
-	return writeOutput(t, location+"/"+app+".target", config)
+	if writeOutput(t, location+"/"+app+".target", config) {
+		fmt.Println("You will want to run 'systemctl --system daemon-reload' to activate the service on the target host")
+		return true
+	}
+
+	return true
 }
 
 func exportSystemdUser(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
@@ -195,6 +200,7 @@ func exportSystemdUser(app string, entries []procfileEntry, formations map[strin
 		}
 	}
 
+	fmt.Println("You will want to run 'systemctl --user daemon-reload' to activate the service on the target host")
 	return true
 }
 
