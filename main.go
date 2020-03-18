@@ -37,7 +37,11 @@ func (p *procfileEntry) program() string {
 }
 
 func (p *procfileEntry) args() string {
-	return shellescape.Quote(strings.Join(strings.Fields(p.Command)[1:], " "))
+	return strings.Join(strings.Fields(p.Command)[1:], " ")
+}
+
+func (p *procfileEntry) argsEscaped() string {
+	return shellescape.Quote(p.args())
 }
 
 const portEnvVar = "PORT"

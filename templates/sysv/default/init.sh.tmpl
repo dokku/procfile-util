@@ -20,7 +20,7 @@ export PATH
 
 name={{ .app }}-{{ .process_type }}-{{ .num }}
 program={{ .program}}
-args={{ .args }}
+args={{ .args_escaped }}
 pidfile="/var/run/$name.pid"
 user="{{ .user }}"
 group="{{ .group }}"
