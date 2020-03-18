@@ -26,6 +26,8 @@ type formationEntry struct {
 	Count int
 }
 
+type exportFunc func(string, []procfileEntry, map[string]formationEntry, string, int, map[string]interface{}) bool
+
 func (p *procfileEntry) commandList() []string {
 	return strings.Fields(p.Command)
 }
@@ -311,13 +313,14 @@ func exportCommand(entries []procfileEntry, app string, description string, envP
 		fmt.Fprintf(os.Stderr, "no output location specified\n")
 		return false
 	}
-	formats := map[string]bool{
-		"launchd":      true,
-		"runit":        true,
-		"systemd":      true,
-		"systemd-user": true,
-		"sysv":         true,
-		"upstart":      true,
+
+	formats := map[string]exportFunc{
+		"launchd":      exportLaunchd,
+		"runt":         exportRunit,
+		"systemd":      exportSystemd,
+		"systemd-user": exportSystemdUser,
+		"sysv":         exportSysv,
+		"upstart":      exportUpstart,
 	}
 
 	if _, ok := formats[format]; !ok {
@@ -383,28 +386,8 @@ func exportCommand(entries []procfileEntry, app string, description string, envP
 	vars["ulimit_shell"] = ulimitShell(limitCoredump, limitCputime, limitData, limitFileSize, limitLockedMemory, limitOpenFiles, limitUserProcesses, limitPhysicalMemory, limitStackSize)
 	vars["user"] = user
 
-	if format == "launchd" {
-		return exportLaunchd(app, entries, formations, location, defaultPort, vars)
-	}
-
-	if format == "runit" {
-		return exportRunit(app, entries, formations, location, defaultPort, vars)
-	}
-
-	if format == "systemd" {
-		return exportSystemd(app, entries, formations, location, defaultPort, vars)
-	}
-
-	if format == "systemd-user" {
-		return exportSystemdUser(app, entries, formations, location, defaultPort, vars)
-	}
-
-	if format == "sysv" {
-		return exportSysv(app, entries, formations, location, defaultPort, vars)
-	}
-
-	if format == "upstart" {
-		return exportUpstart(app, entries, formations, location, defaultPort, vars)
+	if fn, ok := formats[format]; ok {
+		return fn(app, entries, formations, location, defaultPort, vars)
 	}
 
 	return false
