@@ -49,8 +49,8 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 		return false
 	}
 
-	if _, err := os.Stat(location); os.IsNotExist(err) {
-		os.MkdirAll(location, os.ModePerm)
+	if _, err := os.Stat(location + "/service"); os.IsNotExist(err) {
+		os.MkdirAll(location+"/service", os.ModePerm)
 	}
 
 	for i, entry := range entries {
@@ -59,16 +59,16 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 
 		for num <= count {
 			processDirectory := fmt.Sprintf("%s-%s-%d", app, entry.Name, num)
-			folderPath := location + "/" + processDirectory
+			folderPath := location + "/service/" + processDirectory
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 
-			fmt.Println("creating:", app+"-"+processName)
+			fmt.Println("creating:", folderPath)
 			os.MkdirAll(folderPath, os.ModePerm)
 
-			fmt.Println("creating:", app+"-"+processName+"/env")
+			fmt.Println("creating:", folderPath+"/env")
 			os.MkdirAll(folderPath+"/env", os.ModePerm)
 
-			fmt.Println("creating:", app+"-"+processName+"/log")
+			fmt.Println("creating:", folderPath+"/log")
 			os.MkdirAll(folderPath+"/log", os.ModePerm)
 
 			port := portFor(i, num, defaultPort)
@@ -88,7 +88,7 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 			env["PS"] = app + "-" + processName
 
 			for key, value := range env {
-				fmt.Println("writing:", app+"-"+processName+"/env/"+key)
+				fmt.Println("writing:", folderPath+"/env/"+key)
 				f, err := os.Create(folderPath + "/env/" + key)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
