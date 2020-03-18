@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"regexp"
 	"sort"
 	"strconv"
@@ -308,7 +309,7 @@ func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, pr
 	return true
 }
 
-func exportCommand(entries []procfileEntry, app string, description string, envPath string, format string, formation string, group string, home string, limitCoredump string, limitCputime string, limitData string, limitFileSize string, limitLockedMemory string, limitOpenFiles string, limitUserProcesses string, limitPhysicalMemory string, limitStackSize string, location string, logPath string, nice string, prestart string, workingDirectoryPath string, runPath string, timeout int, user string, defaultPort int) bool {
+func exportCommand(entries []procfileEntry, app string, description string, envPath string, format string, formation string, group string, home string, limitCoredump string, limitCputime string, limitData string, limitFileSize string, limitLockedMemory string, limitOpenFiles string, limitUserProcesses string, limitPhysicalMemory string, limitStackSize string, location string, logPath string, nice string, prestart string, workingDirectoryPath string, runPath string, timeout int, processUser string, defaultPort int) bool {
 	if format == "" {
 		fmt.Fprintf(os.Stderr, "no format specified\n")
 		return false
@@ -338,16 +339,22 @@ func exportCommand(entries []procfileEntry, app string, description string, envP
 		return false
 	}
 
-	if user == "" {
-		user = app
+	if processUser == "" {
+		processUser = app
 	}
 
 	if group == "" {
 		group = app
 	}
 
+	u, err := user.Current()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return false
+	}
+
 	if home == "" {
-		home = "/home/" + app
+		home = "/home/" + u.Username
 	}
 
 	env := make(map[string]string)
@@ -388,7 +395,7 @@ func exportCommand(entries []procfileEntry, app string, description string, envP
 	vars["working_directory"] = workingDirectoryPath
 	vars["timeout"] = strconv.Itoa(timeout)
 	vars["ulimit_shell"] = ulimitShell(limitCoredump, limitCputime, limitData, limitFileSize, limitLockedMemory, limitOpenFiles, limitUserProcesses, limitPhysicalMemory, limitStackSize)
-	vars["user"] = user
+	vars["user"] = processUser
 
 	if fn, ok := formats[format]; ok {
 		return fn(app, entries, formations, location, defaultPort, vars)
