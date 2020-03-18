@@ -26,7 +26,7 @@ func exportLaunchd(app string, entries []procfileEntry, formations map[string]fo
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if !writeOutput(l, location+"/Library/LaunchDaemons/"+app+"-"+processName+".plist", config) {
+			if !writeOutput(l, fmt.Sprintf("%s/Library/LaunchDaemons/%s-%s.plist", location, app, processName), config) {
 				return false
 			}
 
@@ -74,7 +74,7 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
 
-			if !writeOutput(r, folderPath+"/run", config) {
+			if !writeOutput(r, fmt.Sprintf("%s/run", folderPath), config) {
 				return false
 			}
 
@@ -107,7 +107,7 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 				}
 			}
 
-			if !writeOutput(l, folderPath+"/log/run", config) {
+			if !writeOutput(l, fmt.Sprintf("%s/log/run", folderPath), config) {
 				return false
 			}
 
@@ -147,7 +147,7 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if !writeOutput(s, location+"/etc/systemd/system/"+app+"-"+fileName+".service", config) {
+			if !writeOutput(s, fmt.Sprintf("%s/etc/systemd/system/%s-%s.service", location, app, filename), config) {
 				return false
 			}
 
@@ -157,7 +157,7 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 
 	config := vars
 	config["processes"] = processes
-	if writeOutput(t, location+"/etc/systemd/system/"+app+".target", config) {
+	if writeOutput(t, fmt.Sprintf("%s/etc/systemd/system/%s.target", location, app), config) {
 		fmt.Println("You will want to run 'systemctl --system daemon-reload' to activate the service on the target host")
 		return true
 	}
