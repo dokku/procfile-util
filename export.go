@@ -253,10 +253,12 @@ func exportUpstart(app string, entries []procfileEntry, formations map[string]fo
 		num := 1
 		count := processCount(entry, formations)
 
-		variables := vars
-		variables["process_type"] = entry.Name
-		if !writeOutput(t, fmt.Sprintf("%s/etc/init/%s-%s.conf", location, app, entry.Name), variables) {
-			return false
+		if count > 0 {
+			config := vars
+			config["process_type"] = entry.Name
+			if !writeOutput(t, fmt.Sprintf("%s/etc/init/%s-%s.conf", location, app, entry.Name), config) {
+				return false
+			}
 		}
 
 		for num <= count {
