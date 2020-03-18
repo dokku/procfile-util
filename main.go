@@ -551,7 +551,7 @@ func main() {
 	formatExportFlag := exportCmd.String("", "format", &argparse.Options{Help: "format to export"})
 	formationExportFlag := exportCmd.String("", "formation", &argparse.Options{Default: "all=1", Help: "specify what processes will run and how many"})
 	groupExportFlag := exportCmd.String("", "group", &argparse.Options{Help: "group to run the command as"})
-	homeExportFlag := exportCmd.String("", "group", &argparse.Options{Help: "home directory for program"})
+	homeExportFlag := exportCmd.String("", "home", &argparse.Options{Help: "home directory for program"})
 	limitCoredumpExportFlag := exportCmd.String("", "limit-coredump", &argparse.Options{Help: "Largest size (in blocks) of a core file that can be created. (setrlimit RLIMIT_CORE)"})
 	limitCputimeExportFlag := exportCmd.String("", "limit-cputime", &argparse.Options{Help: "Maximum amount of cpu time (in seconds) a program may use. (setrlimit RLIMIT_CPU)"})
 	limitDataExportFlag := exportCmd.String("", "limit-data", &argparse.Options{Help: "Maximum data segment size (setrlimit RLIMIT_DATA)"})
