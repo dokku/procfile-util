@@ -14,8 +14,8 @@ func exportLaunchd(app string, entries []procfileEntry, formations map[string]fo
 		return false
 	}
 
-	if _, err := os.Stat(location); os.IsNotExist(err) {
-		os.MkdirAll(location, os.ModePerm)
+	if _, err := os.Stat(location + "/Library/LaunchDaemons/"); os.IsNotExist(err) {
+		os.MkdirAll(location+"/Library/LaunchDaemons/", os.ModePerm)
 	}
 
 	for i, entry := range entries {
@@ -26,7 +26,7 @@ func exportLaunchd(app string, entries []procfileEntry, formations map[string]fo
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if !writeOutput(l, location+"/"+app+"-"+processName+".plist", config) {
+			if !writeOutput(l, location+"/Library/LaunchDaemons/"+app+"-"+processName+".plist", config) {
 				return false
 			}
 
@@ -131,8 +131,8 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 		return false
 	}
 
-	if _, err := os.Stat(location); os.IsNotExist(err) {
-		os.MkdirAll(location, os.ModePerm)
+	if _, err := os.Stat(location + "/etc/systemd/system/"); os.IsNotExist(err) {
+		os.MkdirAll(location+"/etc/systemd/system/", os.ModePerm)
 	}
 
 	processes := []string{}
@@ -147,7 +147,7 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if !writeOutput(s, location+"/"+app+"-"+fileName+".service", config) {
+			if !writeOutput(s, location+"/etc/systemd/system/"+app+"-"+fileName+".service", config) {
 				return false
 			}
 
@@ -157,7 +157,7 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 
 	config := vars
 	config["processes"] = processes
-	if writeOutput(t, location+"/"+app+".target", config) {
+	if writeOutput(t, location+"/etc/systemd/system/"+app+".target", config) {
 		fmt.Println("You will want to run 'systemctl --system daemon-reload' to activate the service on the target host")
 		return true
 	}
@@ -172,8 +172,9 @@ func exportSystemdUser(app string, entries []procfileEntry, formations map[strin
 		return false
 	}
 
-	if _, err := os.Stat(location); os.IsNotExist(err) {
-		os.MkdirAll(location, os.ModePerm)
+	path := vars["home"].(string) + "/.config/systemd/user/"
+	if _, err := os.Stat(location + path); os.IsNotExist(err) {
+		os.MkdirAll(location+path, os.ModePerm)
 	}
 
 	for i, entry := range entries {
@@ -184,7 +185,7 @@ func exportSystemdUser(app string, entries []procfileEntry, formations map[strin
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if !writeOutput(s, location+"/"+app+"-"+processName+".service", config) {
+			if !writeOutput(s, fmt.Sprintf("%s%s%s-%s.service", location, path, app, processName), config) {
 				return false
 			}
 
@@ -203,8 +204,8 @@ func exportSysv(app string, entries []procfileEntry, formations map[string]forma
 		return false
 	}
 
-	if _, err := os.Stat(location); os.IsNotExist(err) {
-		os.MkdirAll(location, os.ModePerm)
+	if _, err := os.Stat(location + "/etc/init.d/"); os.IsNotExist(err) {
+		os.MkdirAll(location+"/etc/init.d/", os.ModePerm)
 	}
 
 	for i, entry := range entries {
@@ -215,7 +216,7 @@ func exportSysv(app string, entries []procfileEntry, formations map[string]forma
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if !writeOutput(l, location+"/"+app+"-"+processName, config) {
+			if !writeOutput(l, fmt.Sprintf("%s/etc/init.d/%s-%s", location, app, processName), config) {
 				return false
 			}
 
@@ -244,8 +245,8 @@ func exportUpstart(app string, entries []procfileEntry, formations map[string]fo
 		return false
 	}
 
-	if _, err := os.Stat(location); os.IsNotExist(err) {
-		os.MkdirAll(location, os.ModePerm)
+	if _, err := os.Stat(location + "/etc/init/"); os.IsNotExist(err) {
+		os.MkdirAll(location+"/etc/init/", os.ModePerm)
 	}
 
 	for i, entry := range entries {
@@ -254,7 +255,7 @@ func exportUpstart(app string, entries []procfileEntry, formations map[string]fo
 
 		variables := vars
 		variables["process_type"] = entry.Name
-		if !writeOutput(t, location+"/"+app+"-"+entry.Name+".conf", variables) {
+		if !writeOutput(t, fmt.Sprintf("%s/etc/init/%s-%s.conf", location, app, entry.Name), variables) {
 			return false
 		}
 
@@ -263,7 +264,7 @@ func exportUpstart(app string, entries []procfileEntry, formations map[string]fo
 			fileName := fmt.Sprintf("%s-%d", entry.Name, num)
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if !writeOutput(p, location+"/"+app+"-"+fileName+".conf", config) {
+			if !writeOutput(p, fmt.Sprintf("%s/etc/init/%s-%s.conf", location, app, fileName), config) {
 				return false
 			}
 
@@ -272,7 +273,7 @@ func exportUpstart(app string, entries []procfileEntry, formations map[string]fo
 	}
 
 	config := vars
-	return writeOutput(c, location+"/"+app+".conf", config)
+	return writeOutput(c, fmt.Sprintf("%s/etc/init/%s.conf", location, app), config)
 }
 func processCount(entry procfileEntry, formations map[string]formationEntry) int {
 	count := 0
