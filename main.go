@@ -516,12 +516,6 @@ func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, proc
 }
 
 func main() {
-	workingDirectoryPath, err := os.Getwd()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(1)
-	}
-
 	parser := argparse.NewParser("procfile-util", "A procfile parsing tool")
 	loglevelFlag := parser.Selector("l", "loglevel", []string{"info", "debug"}, &argparse.Options{Default: "info", Help: "loglevel to use"})
 	procfileFlag := parser.String("P", "procfile", &argparse.Options{Default: "Procfile", Help: "path to a procfile"})
@@ -565,7 +559,7 @@ func main() {
 	logPathExportFlag := exportCmd.String("", "log-path", &argparse.Options{Default: "/var/log", Help: "log directory"})
 	niceExportFlag := exportCmd.String("", "nice", &argparse.Options{Help: "nice level to add to this program before running"})
 	prestartExportFlag := exportCmd.String("", "prestart", &argparse.Options{Help: "A command to execute before starting and restarting. A failure of this command will cause the start/restart to abort. This is useful for health checks, config tests, or similar operations."})
-	workingDirectoryPathExportFlag := exportCmd.String("", "working-directory-path", &argparse.Options{Default: workingDirectoryPath, Help: "working directory path for app"})
+	workingDirectoryPathExportFlag := exportCmd.String("", "working-directory-path", &argparse.Options{Default: "/", Help: "working directory path for app"})
 	runExportFlag := exportCmd.String("", "run", &argparse.Options{Help: "run pid file directory, defaults to /var/run/<app>"})
 	timeoutExportFlag := exportCmd.Int("", "timeout", &argparse.Options{Default: 5, Help: "amount of time (in seconds) processes have to shutdown gracefully before receiving a SIGKILL"})
 	userExportFlag := exportCmd.String("", "user", &argparse.Options{Help: "user to run the command as"})
@@ -583,7 +577,7 @@ func main() {
 	envPathShowFlag := showCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
 	processTypeShowFlag := showCmd.String("p", "process-type", &argparse.Options{Help: "name of process to show", Required: true})
 
-	if err = parser.Parse(os.Args); err != nil {
+	if err := parser.Parse(os.Args); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", parser.Usage(err))
 		os.Exit(1)
 		return
