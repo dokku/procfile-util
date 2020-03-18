@@ -92,7 +92,7 @@ start() {
   {{ end }}
 
   # Setup any environmental stuff beforehand
-  {{- if .ulimit_shell }}{{ .ulimit_shell }}{{ end }}
+  {{ if .ulimit_shell }}{{ .ulimit_shell }}{{ end }}
 
   # Run the program!
   {{- if .nice }}nice -n "$nice"{{ end }}
