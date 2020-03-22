@@ -147,7 +147,7 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if !writeOutput(s, fmt.Sprintf("%s/etc/systemd/system/%s-%s.service", location, app, filename), config) {
+			if !writeOutput(s, fmt.Sprintf("%s/etc/systemd/system/%s-%s.service", location, app, fileName), config) {
 				return false
 			}
 
