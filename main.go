@@ -542,7 +542,7 @@ func main() {
 	appExportFlag := exportCmd.String("", "app", &argparse.Options{Default: "app", Help: "name of app"})
 	descriptionExportFlag := exportCmd.String("", "description", &argparse.Options{Help: "process description"})
 	envPathExportFlag := exportCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
-	formatExportFlag := exportCmd.String("", "format", &argparse.Options{Help: "format to export"})
+	formatExportFlag := exportCmd.String("", "format", &argparse.Options{Default: "systemd", Help: "format to export"})
 	formationExportFlag := exportCmd.String("", "formation", &argparse.Options{Default: "all=1", Help: "specify what processes will run and how many"})
 	groupExportFlag := exportCmd.String("", "group", &argparse.Options{Help: "group to run the command as"})
 	homeExportFlag := exportCmd.String("", "home", &argparse.Options{Help: "home directory for program"})
