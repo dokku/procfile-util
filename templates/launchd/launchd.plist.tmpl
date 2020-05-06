@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>{{ .app }}-{{ .process_type }}-{{ .num }}</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PORT</key>
+        <string>{{ .port }}</string>
+        <key>PS</key>
+        <string>{{ .ps }}</string>
+    {{- range $key, $value := .env }}
+        <key>{{ $key }}</key>
+        <string>{{ $value }}</string>{{ end }}
+    </dict>
+    <key>ProgramArguments</key>
+    <array>
+    {{- range $command := .command_list }}
+        <string>{{ if eq $command "$PORT" }}{{ $.port }}{{ else }}{{ $command }}{{ end }}</string>{{ end }}
+    </array>
+    <key>KeepAlive</key>
+    <true/>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>{{ .log }}/{{ .app }}-{{ .process_type }}-{{ .num }}-stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>{{ .log }}/{{ .app }}-{{ .process_type }}-{{ .num }}-stderr.log</string>
+    <key>UserName</key>
+    <string>{{ .user }}</string>
+    <key>WorkingDirectory</key>
+    <string>{{ .working_directory }}</string>
+    {{- if .nice }}
+    <key>Nice</key><integer>{{ .nice }}</integer>{{ end }}
+</dict>
+</plist>

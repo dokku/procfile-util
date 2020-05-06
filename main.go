@@ -5,18 +5,44 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/akamensky/argparse"
 	"github.com/andrew-d/go-termutil"
 	"github.com/joho/godotenv"
+	"gopkg.in/alessio/shellescape.v1"
 )
 
 type procfileEntry struct {
 	Name    string
 	Command string
+}
+
+type formationEntry struct {
+	Name  string
+	Count int
+}
+
+type exportFunc func(string, []procfileEntry, map[string]formationEntry, string, int, map[string]interface{}) bool
+
+func (p *procfileEntry) commandList() []string {
+	return strings.Fields(p.Command)
+}
+
+func (p *procfileEntry) program() string {
+	return strings.Fields(p.Command)[0]
+}
+
+func (p *procfileEntry) args() string {
+	return strings.Join(strings.Fields(p.Command)[1:], " ")
+}
+
+func (p *procfileEntry) argsEscaped() string {
+	return shellescape.Quote(p.args())
 }
 
 const portEnvVar = "PORT"
@@ -169,13 +195,13 @@ func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	return entries, nil
 }
 
-func expandEnv(e procfileEntry, envPath string, allowEnv bool, defaultPort string) (string, error) {
+func expandEnv(e procfileEntry, envPath string, allowEnv bool, defaultPort int) (string, error) {
 	baseExpandFunc := func(key string) string {
 		if key == "PS" {
 			return os.Getenv("PS")
 		}
 		if key == portEnvVar {
-			return defaultPort
+			return string(defaultPort)
 		}
 		return ""
 	}
@@ -256,7 +282,7 @@ func existsCommand(entries []procfileEntry, processType string) bool {
 	return false
 }
 
-func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort string, delimiter string) bool {
+func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort int, delimiter string) bool {
 	hasErrors := false
 	var expandedEntries []procfileEntry
 	for _, entry := range entries {
@@ -281,6 +307,156 @@ func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, pr
 	}
 
 	return true
+}
+
+func exportCommand(entries []procfileEntry, app string, description string, envPath string, format string, formation string, group string, home string, limitCoredump string, limitCputime string, limitData string, limitFileSize string, limitLockedMemory string, limitOpenFiles string, limitUserProcesses string, limitPhysicalMemory string, limitStackSize string, location string, logPath string, nice string, prestart string, workingDirectoryPath string, runPath string, timeout int, processUser string, defaultPort int) bool {
+	if format == "" {
+		fmt.Fprintf(os.Stderr, "no format specified\n")
+		return false
+	}
+	if location == "" {
+		fmt.Fprintf(os.Stderr, "no output location specified\n")
+		return false
+	}
+
+	formats := map[string]exportFunc{
+		"launchd":      exportLaunchd,
+		"runit":        exportRunit,
+		"systemd":      exportSystemd,
+		"systemd-user": exportSystemdUser,
+		"sysv":         exportSysv,
+		"upstart":      exportUpstart,
+	}
+
+	if _, ok := formats[format]; !ok {
+		fmt.Fprintf(os.Stderr, "invalid format type: %s\n", format)
+		return false
+	}
+
+	formations, err := parseFormation(formation)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return false
+	}
+
+	if processUser == "" {
+		processUser = app
+	}
+
+	if group == "" {
+		group = app
+	}
+
+	u, err := user.Current()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return false
+	}
+
+	if home == "" {
+		home = "/home/" + u.Username
+	}
+
+	env := make(map[string]string)
+	if envPath != "" {
+		b, err := ioutil.ReadFile(envPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error reading env file: %s\n", err)
+			return false
+		}
+
+		content := string(b)
+		env, err = godotenv.Unmarshal(content)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error parsing env file: %s\n", err)
+			return false
+		}
+	}
+
+	vars := make(map[string]interface{})
+	vars["app"] = app
+	vars["description"] = description
+	vars["env"] = env
+	vars["group"] = group
+	vars["home"] = home
+	vars["log"] = logPath
+	vars["location"] = location
+	vars["limit_coredump"] = limitCoredump
+	vars["limit_cputime"] = limitCputime
+	vars["limit_data"] = limitData
+	vars["limit_file_size"] = limitFileSize
+	vars["limit_locked_memory"] = limitLockedMemory
+	vars["limit_open_files"] = limitOpenFiles
+	vars["limit_user_processes"] = limitUserProcesses
+	vars["limit_physical_memory"] = limitPhysicalMemory
+	vars["limit_stack_size"] = limitStackSize
+	vars["nice"] = nice
+	vars["prestart"] = prestart
+	vars["working_directory"] = workingDirectoryPath
+	vars["timeout"] = strconv.Itoa(timeout)
+	vars["ulimit_shell"] = ulimitShell(limitCoredump, limitCputime, limitData, limitFileSize, limitLockedMemory, limitOpenFiles, limitUserProcesses, limitPhysicalMemory, limitStackSize)
+	vars["user"] = processUser
+
+	if fn, ok := formats[format]; ok {
+		return fn(app, entries, formations, location, defaultPort, vars)
+	}
+
+	return false
+}
+
+func ulimitShell(limitCoredump string, limitCputime string, limitData string, limitFileSize string, limitLockedMemory string, limitOpenFiles string, limitUserProcesses string, limitPhysicalMemory string, limitStackSize string) string {
+	s := []string{}
+	if limitCoredump != "" {
+		s = append(s, "ulimit -c ${limit_coredump}")
+	}
+	if limitCputime != "" {
+		s = append(s, "ulimit -t ${limit_cputime}")
+	}
+	if limitData != "" {
+		s = append(s, "ulimit -d ${limit_data}")
+	}
+	if limitFileSize != "" {
+		s = append(s, "ulimit -f ${limit_file_size}")
+	}
+	if limitLockedMemory != "" {
+		s = append(s, "ulimit -l ${limit_locked_memory}")
+	}
+	if limitOpenFiles != "" {
+		s = append(s, "ulimit -n ${limit_open_files}")
+	}
+	if limitUserProcesses != "" {
+		s = append(s, "ulimit -u ${limit_user_processes}")
+	}
+	if limitPhysicalMemory != "" {
+		s = append(s, "ulimit -m ${limit_physical_memory}")
+	}
+	if limitStackSize != "" {
+		s = append(s, "ulimit -s ${limit_stack_size}")
+	}
+
+	return strings.Join(s, "\n")
+}
+
+func parseFormation(formation string) (map[string]formationEntry, error) {
+	entries := make(map[string]formationEntry)
+	for _, formation := range strings.Split(formation, ",") {
+		parts := strings.Split(formation, "=")
+		if len(parts) != 2 {
+			return entries, fmt.Errorf("invalid formation: %s", formation)
+		}
+
+		i, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return entries, fmt.Errorf("invalid formation: %s", err)
+		}
+
+		entries[parts[0]] = formationEntry{
+			Name:  parts[0],
+			Count: i,
+		}
+	}
+
+	return entries, nil
 }
 
 func deleteCommand(entries []procfileEntry, processType string, writePath string, stdout bool, delimiter string, path string) bool {
@@ -315,7 +491,7 @@ func setCommand(entries []procfileEntry, processType string, command string, wri
 	return outputProcfile(path, writePath, delimiter, stdout, validEntries)
 }
 
-func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort string) bool {
+func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort int) bool {
 	var foundEntry procfileEntry
 	for _, entry := range entries {
 		if processType == entry.Name {
@@ -344,7 +520,7 @@ func main() {
 	loglevelFlag := parser.Selector("l", "loglevel", []string{"info", "debug"}, &argparse.Options{Default: "info", Help: "loglevel to use"})
 	procfileFlag := parser.String("P", "procfile", &argparse.Options{Default: "Procfile", Help: "path to a procfile"})
 	delimiterFlag := parser.String("D", "delimiter", &argparse.Options{Default: ":", Help: "delimiter in use within procfile"})
-	defaultPortFlag := parser.String("d", "default-port", &argparse.Options{Default: "5000", Help: "default port to use"})
+	defaultPortFlag := parser.Int("d", "default-port", &argparse.Options{Default: 5000, Help: "default port to use"})
 	versionFlag := parser.Flag("v", "version", &argparse.Options{Help: "show version"})
 
 	checkCmd := parser.NewCommand("check", "check that the specified procfile is valid")
@@ -362,6 +538,32 @@ func main() {
 	envPathExpandFlag := expandCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
 	processTypeExpandFlag := expandCmd.String("p", "process-type", &argparse.Options{Help: "name of process to expand"})
 
+	exportCmd := parser.NewCommand("export", "export the application to another process management format")
+	appExportFlag := exportCmd.String("", "app", &argparse.Options{Default: "app", Help: "name of app"})
+	descriptionExportFlag := exportCmd.String("", "description", &argparse.Options{Help: "process description"})
+	envPathExportFlag := exportCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
+	formatExportFlag := exportCmd.String("", "format", &argparse.Options{Default: "systemd", Help: "format to export"})
+	formationExportFlag := exportCmd.String("", "formation", &argparse.Options{Default: "all=1", Help: "specify what processes will run and how many"})
+	groupExportFlag := exportCmd.String("", "group", &argparse.Options{Help: "group to run the command as"})
+	homeExportFlag := exportCmd.String("", "home", &argparse.Options{Help: "home directory for program"})
+	limitCoredumpExportFlag := exportCmd.String("", "limit-coredump", &argparse.Options{Help: "Largest size (in blocks) of a core file that can be created. (setrlimit RLIMIT_CORE)"})
+	limitCputimeExportFlag := exportCmd.String("", "limit-cputime", &argparse.Options{Help: "Maximum amount of cpu time (in seconds) a program may use. (setrlimit RLIMIT_CPU)"})
+	limitDataExportFlag := exportCmd.String("", "limit-data", &argparse.Options{Help: "Maximum data segment size (setrlimit RLIMIT_DATA)"})
+	limitFileSizeExportFlag := exportCmd.String("", "limit-file-size", &argparse.Options{Help: "Maximum size (in blocks) of a file receiving writes (setrlimit RLIMIT_FSIZE)"})
+	limitLockedMemoryExportFlag := exportCmd.String("", "limit-locked-memory", &argparse.Options{Help: "Maximum amount of memory (in bytes) lockable with mlock(2) (setrlimit RLIMIT_MEMLOCK)"})
+	limitOpenFilesExportFlag := exportCmd.String("", "limit-open-files", &argparse.Options{Help: "maximum number of open files, sockets, etc. (setrlimit RLIMIT_NOFILE)"})
+	limitUserProcessesExportFlag := exportCmd.String("", "limit-user-processes", &argparse.Options{Help: "Maximum number of running processes (or threads!) for this user id. Not recommended because this setting applies to the user, not the process group. (setrlimit RLIMIT_NPROC)"})
+	limitPhysicalMemoryExportFlag := exportCmd.String("", "limit-physical-memory", &argparse.Options{Help: "Maximum resident set size (in bytes); the amount of physical memory used by a process. (setrlimit RLIMIT_RSS)"})
+	limitStackSizeExportFlag := exportCmd.String("", "limit-stack-size", &argparse.Options{Help: "Maximum size (in bytes) of a stack segment (setrlimit RLIMIT_STACK)"})
+	locationExportFlag := exportCmd.String("", "location", &argparse.Options{Help: "location to output to"})
+	logPathExportFlag := exportCmd.String("", "log-path", &argparse.Options{Default: "/var/log", Help: "log directory"})
+	niceExportFlag := exportCmd.String("", "nice", &argparse.Options{Help: "nice level to add to this program before running"})
+	prestartExportFlag := exportCmd.String("", "prestart", &argparse.Options{Help: "A command to execute before starting and restarting. A failure of this command will cause the start/restart to abort. This is useful for health checks, config tests, or similar operations."})
+	workingDirectoryPathExportFlag := exportCmd.String("", "working-directory-path", &argparse.Options{Default: "/", Help: "working directory path for app"})
+	runExportFlag := exportCmd.String("", "run", &argparse.Options{Help: "run pid file directory, defaults to /var/run/<app>"})
+	timeoutExportFlag := exportCmd.Int("", "timeout", &argparse.Options{Default: 5, Help: "amount of time (in seconds) processes have to shutdown gracefully before receiving a SIGKILL"})
+	userExportFlag := exportCmd.String("", "user", &argparse.Options{Help: "user to run the command as"})
+
 	listCmd := parser.NewCommand("list", "list all process types in a procfile")
 
 	setCmd := parser.NewCommand("set", "set the command for a process type in a file")
@@ -375,8 +577,7 @@ func main() {
 	envPathShowFlag := showCmd.String("e", "env-file", &argparse.Options{Help: "path to a dotenv file"})
 	processTypeShowFlag := showCmd.String("p", "process-type", &argparse.Options{Help: "name of process to show", Required: true})
 
-	err := parser.Parse(os.Args)
-	if err != nil {
+	if err := parser.Parse(os.Args); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", parser.Usage(err))
 		os.Exit(1)
 		return
@@ -406,6 +607,8 @@ func main() {
 		success = existsCommand(entries, *processTypeExistsFlag)
 	} else if expandCmd.Happened() {
 		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag, *defaultPortFlag, *delimiterFlag)
+	} else if exportCmd.Happened() {
+		success = exportCommand(entries, *appExportFlag, *descriptionExportFlag, *envPathExportFlag, *formatExportFlag, *formationExportFlag, *groupExportFlag, *homeExportFlag, *limitCoredumpExportFlag, *limitCputimeExportFlag, *limitDataExportFlag, *limitFileSizeExportFlag, *limitLockedMemoryExportFlag, *limitOpenFilesExportFlag, *limitUserProcessesExportFlag, *limitPhysicalMemoryExportFlag, *limitStackSizeExportFlag, *locationExportFlag, *logPathExportFlag, *niceExportFlag, *prestartExportFlag, *workingDirectoryPathExportFlag, *runExportFlag, *timeoutExportFlag, *userExportFlag, *defaultPortFlag)
 	} else if listCmd.Happened() {
 		success = listCommand(entries)
 	} else if setCmd.Happened() {

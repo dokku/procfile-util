@@ -1,0 +1,33 @@
+[Unit]
+{{- if .description }}
+Description={{ .description }}{{ end }}
+PartOf={{ .app }}.target
+StopWhenUnneeded=yes
+
+[Service]
+User={{ .user }}
+Group={{ .group }}
+WorkingDirectory={{ .working_directory }}
+Environment=PORT={{ .port }}
+Environment=PS={{ .ps }}
+EnvironmentFile=-/etc/default/{{ .app  }}
+EnvironmentFile=-/etc/sysconfig/{{ .app }}
+{{- range $key, $value := .env }}
+Environment="{{ $key }}={{ $value }}"
+{{ end }}
+ExecStart=/bin/bash -lc 'exec -a "{{ .ps }}" {{ .command }}'
+Restart=always
+RestartSec=14s
+StandardInput=null
+StandardOutput={{ .log }}/{{ .app }}-{{ .process_type }}-{{ .num }}-stdout.log
+StandardError={{ .log }}/{{ .app }}-{{ .process_type }}-{{ .num }}-stderr.log
+SyslogIdentifier=%n
+KillMode=mixed
+TimeoutStopSec={{ .timeout }}
+
+{{- if .nice }}
+Nice={{ .nice }}
+{{ end }}
+{{- if .limit_open_files }}
+LimitNOFILE={{ .limit_open_files }}
+{{ end }}

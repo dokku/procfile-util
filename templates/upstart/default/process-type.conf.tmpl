@@ -1,0 +1,4 @@
+description {{ .app }}-{{ .process_type }}
+
+start on starting {{ .app }}
+stop on (runlevel [06] or stopping {{ .app }})
