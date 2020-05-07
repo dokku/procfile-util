@@ -520,7 +520,7 @@ func main() {
 	loglevelFlag := parser.Selector("l", "loglevel", []string{"info", "debug"}, &argparse.Options{Default: "info", Help: "loglevel to use"})
 	procfileFlag := parser.String("P", "procfile", &argparse.Options{Default: "Procfile", Help: "path to a procfile"})
 	delimiterFlag := parser.String("D", "delimiter", &argparse.Options{Default: ":", Help: "delimiter in use within procfile"})
-	defaultPortFlag := parser.Int("d", "default-port", &argparse.Options{Default: 5000, Help: "default port to use"})
+	defaultPortFlag := parser.String("d", "default-port", &argparse.Options{Default: "5000", Help: "default port to use"})
 	versionFlag := parser.Flag("v", "version", &argparse.Options{Help: "show version"})
 
 	checkCmd := parser.NewCommand("check", "check that the specified procfile is valid")
@@ -598,6 +598,17 @@ func main() {
 		return
 	}
 
+	defaultPort := 5000
+	if *defaultPortFlag != "" {
+		i, err := strconv.Atoi(*defaultPortFlag)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Invalid default port value: %v\n", err)
+			os.Exit(1)
+			return
+		}
+		defaultPort = i
+	}
+
 	success := false
 	if checkCmd.Happened() {
 		success = checkCommand(entries)
@@ -606,15 +617,15 @@ func main() {
 	} else if existsCmd.Happened() {
 		success = existsCommand(entries, *processTypeExistsFlag)
 	} else if expandCmd.Happened() {
-		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag, *defaultPortFlag, *delimiterFlag)
+		success = expandCommand(entries, *envPathExpandFlag, *allowGetenvExpandFlag, *processTypeExpandFlag, defaultPort, *delimiterFlag)
 	} else if exportCmd.Happened() {
-		success = exportCommand(entries, *appExportFlag, *descriptionExportFlag, *envPathExportFlag, *formatExportFlag, *formationExportFlag, *groupExportFlag, *homeExportFlag, *limitCoredumpExportFlag, *limitCputimeExportFlag, *limitDataExportFlag, *limitFileSizeExportFlag, *limitLockedMemoryExportFlag, *limitOpenFilesExportFlag, *limitUserProcessesExportFlag, *limitPhysicalMemoryExportFlag, *limitStackSizeExportFlag, *locationExportFlag, *logPathExportFlag, *niceExportFlag, *prestartExportFlag, *workingDirectoryPathExportFlag, *runExportFlag, *timeoutExportFlag, *userExportFlag, *defaultPortFlag)
+		success = exportCommand(entries, *appExportFlag, *descriptionExportFlag, *envPathExportFlag, *formatExportFlag, *formationExportFlag, *groupExportFlag, *homeExportFlag, *limitCoredumpExportFlag, *limitCputimeExportFlag, *limitDataExportFlag, *limitFileSizeExportFlag, *limitLockedMemoryExportFlag, *limitOpenFilesExportFlag, *limitUserProcessesExportFlag, *limitPhysicalMemoryExportFlag, *limitStackSizeExportFlag, *locationExportFlag, *logPathExportFlag, *niceExportFlag, *prestartExportFlag, *workingDirectoryPathExportFlag, *runExportFlag, *timeoutExportFlag, *userExportFlag, defaultPort)
 	} else if listCmd.Happened() {
 		success = listCommand(entries)
 	} else if setCmd.Happened() {
 		success = setCommand(entries, *processTypeSetFlag, *commandSetFlag, *writePathSetFlag, *stdoutSetFlag, *delimiterFlag, *procfileFlag)
 	} else if showCmd.Happened() {
-		success = showCommand(entries, *envPathShowFlag, *allowGetenvShowFlag, *processTypeShowFlag, *defaultPortFlag)
+		success = showCommand(entries, *envPathShowFlag, *allowGetenvShowFlag, *processTypeShowFlag, defaultPort)
 	} else {
 		fmt.Print(parser.Usage(err))
 	}
