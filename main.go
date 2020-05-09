@@ -201,7 +201,7 @@ func expandEnv(e procfileEntry, envPath string, allowEnv bool, defaultPort int) 
 			return os.Getenv("PS")
 		}
 		if key == portEnvVar {
-			return string(defaultPort)
+			return strconv.Itoa(defaultPort)
 		}
 		return ""
 	}
