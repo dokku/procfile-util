@@ -143,7 +143,7 @@ func writeProcfile(path string, delimiter string, entries []procfileEntry) error
 
 func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	var entries []procfileEntry
-	reCmd, _ := regexp.Compile(`^([A-Za-z0-9_-]+)` + delimiter + `\s*(.+)$`)
+	reCmd, _ := regexp.Compile(`^([a-z0-9]([-a-z0-9]*[a-z0-9])?)` + delimiter + `\s*(.+)$`)
 	reComment, _ := regexp.Compile(`^(.*)\s#.+$`)
 
 	text, err := getProcfile(path)
@@ -151,30 +151,51 @@ func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 		return entries, err
 	}
 
+	lineNumber := 0
 	names := make(map[string]bool)
 	scanner := bufio.NewScanner(strings.NewReader(text))
 	for scanner.Scan() {
+		lineNumber++
 		line := scanner.Text()
+		line = strings.TrimSpace(line)
+
 		if len(line) == 0 {
 			continue
 		}
 
 		params := reCmd.FindStringSubmatch(line)
-		if len(params) != 3 {
-			debugMessage(fmt.Sprintf("No matching params in line: %v", line))
+		isCommand := len(params) == 4
+		isComment := strings.HasPrefix(line, "#")
+		if isComment {
 			continue
 		}
 
-		name, cmd := params[1], params[2]
+		if !isCommand {
+			return entries, fmt.Errorf("invalid line in procfile, line %d", lineNumber)
+		}
+
+		name, cmd := params[1], params[3]
+		if len(name) > 63 {
+			return entries, fmt.Errorf("process name over 63 characters, line %d", lineNumber)
+		}
 
 		if names[name] {
-			return entries, fmt.Errorf("process names must be unique")
+			return entries, fmt.Errorf("process names must be unique, line %d", lineNumber)
 		}
 		names[name] = true
 
 		commentParams := reComment.FindStringSubmatch(cmd)
 		if len(commentParams) == 2 {
 			cmd = commentParams[1]
+		}
+
+		cmd = strings.TrimSpace(cmd)
+		if strings.HasPrefix(cmd, "#") {
+			return entries, fmt.Errorf("comment specified in place of command, line %d", lineNumber)
+		}
+
+		if len(cmd) == 0 {
+			return entries, fmt.Errorf("no command specified, line %d", lineNumber)
 		}
 
 		entries = append(entries, procfileEntry{name, cmd})
