@@ -144,6 +144,8 @@ func writeProcfile(path string, delimiter string, entries []procfileEntry) error
 func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 	var entries []procfileEntry
 	reCmd, _ := regexp.Compile(`^([a-z0-9]([-a-z0-9]*[a-z0-9])?)` + delimiter + `\s*(.+)$`)
+	reOldCmd, _ := regexp.Compile(`^([A-Za-z0-9_-]+)` + delimiter + `\s*(.+)$`)
+
 	reComment, _ := regexp.Compile(`^(.*)\s#.+$`)
 
 	text, err := getProcfile(path)
@@ -163,14 +165,20 @@ func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 			continue
 		}
 
+		oldParams := reOldCmd.FindStringSubmatch(line)
 		params := reCmd.FindStringSubmatch(line)
 		isCommand := len(params) == 4
+		isOldCommand := len(oldParams) == 3
 		isComment := strings.HasPrefix(line, "#")
 		if isComment {
 			continue
 		}
 
 		if !isCommand {
+			if isOldCommand {
+				return entries, fmt.Errorf("process name contains invalid characters, line %d", lineNumber)
+			}
+
 			return entries, fmt.Errorf("invalid line in procfile, line %d", lineNumber)
 		}
 
