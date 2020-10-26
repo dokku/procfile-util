@@ -141,17 +141,22 @@ func writeProcfile(path string, delimiter string, entries []procfileEntry) error
 	return w.Flush()
 }
 
-func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
+func parseProcfile(path string, delimiter string, strict bool) ([]procfileEntry, error) {
+	var entries []procfileEntry
+	text, err := getProcfile(path)
+	if err != nil {
+		return entries, err
+	}
+
+	return ParseProcfile(text, delimiter, strict)
+}
+
+func ParseProcfile(text string, delimiter string, strict bool) ([]procfileEntry, error) {
 	var entries []procfileEntry
 	reCmd, _ := regexp.Compile(`^([a-z0-9]([-a-z0-9]*[a-z0-9])?)` + delimiter + `\s*(.+)$`)
 	reOldCmd, _ := regexp.Compile(`^([A-Za-z0-9_-]+)` + delimiter + `\s*(.+)$`)
 
 	reComment, _ := regexp.Compile(`^(.*)\s#.+$`)
-
-	text, err := getProcfile(path)
-	if err != nil {
-		return entries, err
-	}
 
 	lineNumber := 0
 	names := make(map[string]bool)
@@ -175,14 +180,23 @@ func parseProcfile(path string, delimiter string) ([]procfileEntry, error) {
 		}
 
 		if !isCommand {
-			if isOldCommand {
-				return entries, fmt.Errorf("process name contains invalid characters, line %d", lineNumber)
+			if !isOldCommand {
+				return entries, fmt.Errorf("invalid line in procfile, line %d", lineNumber)
 			}
 
-			return entries, fmt.Errorf("invalid line in procfile, line %d", lineNumber)
+			if strict {
+				return entries, fmt.Errorf("process name contains invalid characters, line %d", lineNumber)
+			}
 		}
 
-		name, cmd := params[1], params[3]
+		name := ""
+		cmd := ""
+		if strict {
+			name, cmd = params[1], params[3]
+		} else {
+			name, cmd = oldParams[1], oldParams[2]
+		}
+
 		if len(name) > 63 {
 			return entries, fmt.Errorf("process name over 63 characters, line %d", lineNumber)
 		}
@@ -550,6 +564,7 @@ func main() {
 	procfileFlag := parser.String("P", "procfile", &argparse.Options{Default: "Procfile", Help: "path to a procfile"})
 	delimiterFlag := parser.String("D", "delimiter", &argparse.Options{Default: ":", Help: "delimiter in use within procfile"})
 	defaultPortFlag := parser.String("d", "default-port", &argparse.Options{Default: "5000", Help: "default port to use"})
+	strictFlag := parser.Flag("S", "strict", &argparse.Options{Help: "strictly parse the Procfile"})
 	versionFlag := parser.Flag("v", "version", &argparse.Options{Help: "show version"})
 
 	checkCmd := parser.NewCommand("check", "check that the specified procfile is valid")
@@ -619,8 +634,7 @@ func main() {
 	}
 
 	Loglevel = *loglevelFlag
-
-	entries, err := parseProcfile(*procfileFlag, *delimiterFlag)
+	entries, err := parseProcfile(*procfileFlag, *delimiterFlag, *strictFlag)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
