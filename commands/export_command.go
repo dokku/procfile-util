@@ -8,8 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/josegonzalez/go-procfile-util/export"
-	"github.com/josegonzalez/go-procfile-util/procfile"
+	"procfile-util/export"
+	"procfile-util/procfile"
+
 	"github.com/joho/godotenv"
 )
 

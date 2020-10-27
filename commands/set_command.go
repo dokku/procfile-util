@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/josegonzalez/go-procfile-util/procfile"
+	"procfile-util/procfile"
 )
 
 func SetCommand(entries []procfile.ProcfileEntry, processType string, command string, writePath string, stdout bool, delimiter string, path string) bool {

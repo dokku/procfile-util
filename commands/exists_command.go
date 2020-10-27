@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/josegonzalez/go-procfile-util/procfile"
+	"procfile-util/procfile"
 )
 
 func ExistsCommand(entries []procfile.ProcfileEntry, processType string) bool {

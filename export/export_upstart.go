@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/josegonzalez/go-procfile-util/procfile"
+	"procfile-util/procfile"
 )
 
 func ExportUpstart(app string, entries []procfile.ProcfileEntry, formations map[string]procfile.FormationEntry, location string, defaultPort int, vars map[string]interface{}) bool {

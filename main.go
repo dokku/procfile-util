@@ -5,9 +5,10 @@ import (
 	"os"
 	"strconv"
 
+	"procfile-util/procfile"
+	"procfile-util/commands"
+
 	"github.com/akamensky/argparse"
-	"github.com/josegonzalez/go-procfile-util/procfile"
-	"github.com/josegonzalez/go-procfile-util/commands"
 )
 
 // Version contains the procfile-util version

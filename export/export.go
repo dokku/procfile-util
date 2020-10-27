@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"text/template"
 
-	"github.com/josegonzalez/go-procfile-util/procfile"
+	"procfile-util/procfile"
 )
 
 type ExportFunc func(string, []procfile.ProcfileEntry, map[string]procfile.FormationEntry, string, int, map[string]interface{}) bool

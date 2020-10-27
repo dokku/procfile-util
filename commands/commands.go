@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	"procfile-util/procfile"
+
 	"github.com/joho/godotenv"
-	"github.com/josegonzalez/go-procfile-util/procfile"
 )
 
 const portEnvVar = "PORT"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/josegonzalez/go-procfile-util/procfile"
+	"procfile-util/procfile"
 )
 
 func ExpandCommand(entries []procfile.ProcfileEntry, envPath string, allowGetenv bool, processType string, defaultPort int, delimiter string) bool {

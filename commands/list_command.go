@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/josegonzalez/go-procfile-util/procfile"
+	"procfile-util/procfile"
 )
 
 func ListCommand(entries []procfile.ProcfileEntry) bool {
