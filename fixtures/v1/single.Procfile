@@ -1,0 +1,1 @@
+command: avahi-register
