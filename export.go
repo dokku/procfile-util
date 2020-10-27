@@ -7,7 +7,7 @@ import (
 	"text/template"
 )
 
-func exportLaunchd(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
+func exportLaunchd(app string, entries []ProcfileEntry, formations map[string]FormationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
 	l, err := loadTemplate("launchd", "templates/launchd/launchd.plist.tmpl")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -37,7 +37,7 @@ func exportLaunchd(app string, entries []procfileEntry, formations map[string]fo
 	return true
 }
 
-func exportRunit(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
+func exportRunit(app string, entries []ProcfileEntry, formations map[string]FormationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
 	r, err := loadTemplate("run", "templates/runit/run.tmpl")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -118,7 +118,7 @@ func exportRunit(app string, entries []procfileEntry, formations map[string]form
 	return true
 }
 
-func exportSystemd(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
+func exportSystemd(app string, entries []ProcfileEntry, formations map[string]FormationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
 	t, err := loadTemplate("target", "templates/systemd/default/control.target.tmpl")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -165,7 +165,7 @@ func exportSystemd(app string, entries []procfileEntry, formations map[string]fo
 	return true
 }
 
-func exportSystemdUser(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
+func exportSystemdUser(app string, entries []ProcfileEntry, formations map[string]FormationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
 	s, err := loadTemplate("service", "templates/systemd-user/default/program.service.tmpl")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -197,7 +197,7 @@ func exportSystemdUser(app string, entries []procfileEntry, formations map[strin
 	return true
 }
 
-func exportSysv(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
+func exportSysv(app string, entries []ProcfileEntry, formations map[string]FormationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
 	l, err := loadTemplate("launchd", "templates/sysv/default/init.sh.tmpl")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -226,7 +226,7 @@ func exportSysv(app string, entries []procfileEntry, formations map[string]forma
 
 	return true
 }
-func exportUpstart(app string, entries []procfileEntry, formations map[string]formationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
+func exportUpstart(app string, entries []ProcfileEntry, formations map[string]FormationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
 	p, err := loadTemplate("program", "templates/upstart/default/program.conf.tmpl")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -277,7 +277,7 @@ func exportUpstart(app string, entries []procfileEntry, formations map[string]fo
 	config := vars
 	return writeOutput(c, fmt.Sprintf("%s/etc/init/%s.conf", location, app), config)
 }
-func processCount(entry procfileEntry, formations map[string]formationEntry) int {
+func processCount(entry ProcfileEntry, formations map[string]FormationEntry) int {
 	count := 0
 	if f, ok := formations["all"]; ok {
 		count = f.Count
@@ -292,7 +292,7 @@ func portFor(processIndex int, instance int, base int) int {
 	return 5000 + (processIndex * 100) + (instance - 1)
 }
 
-func templateVars(app string, entry procfileEntry, processName string, num int, port int, vars map[string]interface{}) map[string]interface{} {
+func templateVars(app string, entry ProcfileEntry, processName string, num int, port int, vars map[string]interface{}) map[string]interface{} {
 	config := vars
 	config["args"] = entry.args()
 	config["args_escaped"] = entry.argsEscaped()

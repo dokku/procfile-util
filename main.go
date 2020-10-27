@@ -17,31 +17,33 @@ import (
 	"gopkg.in/alessio/shellescape.v1"
 )
 
-type procfileEntry struct {
+// ProcfileEntry is a struct containing a process type and the corresponding command
+type ProcfileEntry struct {
 	Name    string
 	Command string
 }
 
-type formationEntry struct {
+// FormationEntry is a struct containing a process type and the corresponding count
+type FormationEntry struct {
 	Name  string
 	Count int
 }
 
-type exportFunc func(string, []procfileEntry, map[string]formationEntry, string, int, map[string]interface{}) bool
+type exportFunc func(string, []ProcfileEntry, map[string]FormationEntry, string, int, map[string]interface{}) bool
 
-func (p *procfileEntry) commandList() []string {
+func (p *ProcfileEntry) commandList() []string {
 	return strings.Fields(p.Command)
 }
 
-func (p *procfileEntry) program() string {
+func (p *ProcfileEntry) program() string {
 	return strings.Fields(p.Command)[0]
 }
 
-func (p *procfileEntry) args() string {
+func (p *ProcfileEntry) args() string {
 	return strings.Join(strings.Fields(p.Command)[1:], " ")
 }
 
-func (p *procfileEntry) argsEscaped() string {
+func (p *ProcfileEntry) argsEscaped() string {
 	return shellescape.Quote(p.args())
 }
 
@@ -72,7 +74,8 @@ func infoMessage(message string) {
 	logMessage(message, "info")
 }
 
-func getProcfile(path string) (string, error) {
+// GetProcfileContent returns the content at a path as a string
+func GetProcfileContent(path string) (string, error) {
 	debugMessage(fmt.Sprintf("Attempting to read input from file: %v", path))
 	f, err := os.Open(path)
 	if err != nil {
@@ -97,7 +100,7 @@ func getProcfile(path string) (string, error) {
 	return strings.Join(lines, "\n"), err
 }
 
-func outputProcfile(path string, writePath string, delimiter string, stdout bool, entries []procfileEntry) bool {
+func outputProcfile(path string, writePath string, delimiter string, stdout bool, entries []ProcfileEntry) bool {
 	if writePath != "" && stdout {
 		fmt.Fprintf(os.Stderr, "cannot specify both --stdout and --write-path flags\n")
 		return false
@@ -126,7 +129,7 @@ func outputProcfile(path string, writePath string, delimiter string, stdout bool
 	return true
 }
 
-func writeProcfile(path string, delimiter string, entries []procfileEntry) error {
+func writeProcfile(path string, delimiter string, entries []ProcfileEntry) error {
 	debugMessage(fmt.Sprintf("Attempting to write output to file: %v", path))
 	file, err := os.Create(path)
 	if err != nil {
@@ -141,9 +144,9 @@ func writeProcfile(path string, delimiter string, entries []procfileEntry) error
 	return w.Flush()
 }
 
-func parseProcfile(path string, delimiter string, strict bool) ([]procfileEntry, error) {
-	var entries []procfileEntry
-	text, err := getProcfile(path)
+func parseProcfile(path string, delimiter string, strict bool) ([]ProcfileEntry, error) {
+	var entries []ProcfileEntry
+	text, err := GetProcfileContent(path)
 	if err != nil {
 		return entries, err
 	}
@@ -151,8 +154,9 @@ func parseProcfile(path string, delimiter string, strict bool) ([]procfileEntry,
 	return ParseProcfile(text, delimiter, strict)
 }
 
-func ParseProcfile(text string, delimiter string, strict bool) ([]procfileEntry, error) {
-	var entries []procfileEntry
+// ParseProcfile parses text as a procfile and returns a list of procfile entries
+func ParseProcfile(text string, delimiter string, strict bool) ([]ProcfileEntry, error) {
+	var entries []ProcfileEntry
 	reCmd, _ := regexp.Compile(`^([a-z0-9]([-a-z0-9]*[a-z0-9])?)` + delimiter + `\s*(.+)$`)
 	reOldCmd, _ := regexp.Compile(`^([A-Za-z0-9_-]+)` + delimiter + `\s*(.+)$`)
 
@@ -220,7 +224,7 @@ func ParseProcfile(text string, delimiter string, strict bool) ([]procfileEntry,
 			return entries, fmt.Errorf("no command specified, line %d", lineNumber)
 		}
 
-		entries = append(entries, procfileEntry{name, cmd})
+		entries = append(entries, ProcfileEntry{name, cmd})
 	}
 
 	if scanner.Err() != nil {
@@ -238,7 +242,7 @@ func ParseProcfile(text string, delimiter string, strict bool) ([]procfileEntry,
 	return entries, nil
 }
 
-func expandEnv(e procfileEntry, envPath string, allowEnv bool, defaultPort int) (string, error) {
+func expandEnv(e ProcfileEntry, envPath string, allowEnv bool, defaultPort int) (string, error) {
 	baseExpandFunc := func(key string) string {
 		if key == "PS" {
 			return os.Getenv("PS")
@@ -298,7 +302,7 @@ func expandEnv(e procfileEntry, envPath string, allowEnv bool, defaultPort int) 
 	return os.Expand(s, expandFunc), nil
 }
 
-func checkCommand(entries []procfileEntry) bool {
+func checkCommand(entries []ProcfileEntry) bool {
 	if len(entries) == 0 {
 		fmt.Fprintf(os.Stderr, "no processes defined\n")
 		return false
@@ -314,7 +318,7 @@ func checkCommand(entries []procfileEntry) bool {
 	return true
 }
 
-func existsCommand(entries []procfileEntry, processType string) bool {
+func existsCommand(entries []ProcfileEntry, processType string) bool {
 	for _, entry := range entries {
 		if processType == entry.Name {
 			return true
@@ -325,9 +329,9 @@ func existsCommand(entries []procfileEntry, processType string) bool {
 	return false
 }
 
-func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort int, delimiter string) bool {
+func expandCommand(entries []ProcfileEntry, envPath string, allowGetenv bool, processType string, defaultPort int, delimiter string) bool {
 	hasErrors := false
-	var expandedEntries []procfileEntry
+	var expandedEntries []ProcfileEntry
 	for _, entry := range entries {
 		command, err := expandEnv(entry, envPath, allowGetenv, defaultPort)
 		if err != nil {
@@ -352,7 +356,7 @@ func expandCommand(entries []procfileEntry, envPath string, allowGetenv bool, pr
 	return true
 }
 
-func exportCommand(entries []procfileEntry, app string, description string, envPath string, format string, formation string, group string, home string, limitCoredump string, limitCputime string, limitData string, limitFileSize string, limitLockedMemory string, limitOpenFiles string, limitUserProcesses string, limitPhysicalMemory string, limitStackSize string, location string, logPath string, nice string, prestart string, workingDirectoryPath string, runPath string, timeout int, processUser string, defaultPort int) bool {
+func exportCommand(entries []ProcfileEntry, app string, description string, envPath string, format string, formation string, group string, home string, limitCoredump string, limitCputime string, limitData string, limitFileSize string, limitLockedMemory string, limitOpenFiles string, limitUserProcesses string, limitPhysicalMemory string, limitStackSize string, location string, logPath string, nice string, prestart string, workingDirectoryPath string, runPath string, timeout int, processUser string, defaultPort int) bool {
 	if format == "" {
 		fmt.Fprintf(os.Stderr, "no format specified\n")
 		return false
@@ -480,8 +484,8 @@ func ulimitShell(limitCoredump string, limitCputime string, limitData string, li
 	return strings.Join(s, "\n")
 }
 
-func parseFormation(formation string) (map[string]formationEntry, error) {
-	entries := make(map[string]formationEntry)
+func parseFormation(formation string) (map[string]FormationEntry, error) {
+	entries := make(map[string]FormationEntry)
 	for _, formation := range strings.Split(formation, ",") {
 		parts := strings.Split(formation, "=")
 		if len(parts) != 2 {
@@ -493,7 +497,7 @@ func parseFormation(formation string) (map[string]formationEntry, error) {
 			return entries, fmt.Errorf("invalid formation: %s", err)
 		}
 
-		entries[parts[0]] = formationEntry{
+		entries[parts[0]] = FormationEntry{
 			Name:  parts[0],
 			Count: i,
 		}
@@ -502,8 +506,8 @@ func parseFormation(formation string) (map[string]formationEntry, error) {
 	return entries, nil
 }
 
-func deleteCommand(entries []procfileEntry, processType string, writePath string, stdout bool, delimiter string, path string) bool {
-	var validEntries []procfileEntry
+func deleteCommand(entries []ProcfileEntry, processType string, writePath string, stdout bool, delimiter string, path string) bool {
+	var validEntries []ProcfileEntry
 	for _, entry := range entries {
 		if processType == entry.Name {
 			continue
@@ -514,16 +518,16 @@ func deleteCommand(entries []procfileEntry, processType string, writePath string
 	return outputProcfile(path, writePath, delimiter, stdout, validEntries)
 }
 
-func listCommand(entries []procfileEntry) bool {
+func listCommand(entries []ProcfileEntry) bool {
 	for _, entry := range entries {
 		fmt.Printf("%v\n", entry.Name)
 	}
 	return true
 }
 
-func setCommand(entries []procfileEntry, processType string, command string, writePath string, stdout bool, delimiter string, path string) bool {
-	var validEntries []procfileEntry
-	validEntries = append(validEntries, procfileEntry{processType, command})
+func setCommand(entries []ProcfileEntry, processType string, command string, writePath string, stdout bool, delimiter string, path string) bool {
+	var validEntries []ProcfileEntry
+	validEntries = append(validEntries, ProcfileEntry{processType, command})
 	for _, entry := range entries {
 		if processType == entry.Name {
 			continue
@@ -534,8 +538,8 @@ func setCommand(entries []procfileEntry, processType string, command string, wri
 	return outputProcfile(path, writePath, delimiter, stdout, validEntries)
 }
 
-func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, processType string, defaultPort int) bool {
-	var foundEntry procfileEntry
+func showCommand(entries []ProcfileEntry, envPath string, allowGetenv bool, processType string, defaultPort int) bool {
+	var foundEntry ProcfileEntry
 	for _, entry := range entries {
 		if processType == entry.Name {
 			foundEntry = entry
@@ -543,7 +547,7 @@ func showCommand(entries []procfileEntry, envPath string, allowGetenv bool, proc
 		}
 	}
 
-	if foundEntry == (procfileEntry{}) {
+	if foundEntry == (ProcfileEntry{}) {
 		fmt.Fprintf(os.Stderr, "no matching process entry found\n")
 		return false
 	}
