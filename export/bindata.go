@@ -1,4 +1,4 @@
-// Code generated for package main by go-bindata DO NOT EDIT. (@generated)
+// Code generated for package export by go-bindata DO NOT EDIT. (@generated)
 // sources:
 // templates/launchd/launchd.plist.tmpl
 // templates/runit/log/run.tmpl
@@ -10,7 +10,7 @@
 // templates/upstart/default/control.conf.tmpl
 // templates/upstart/default/process-type.conf.tmpl
 // templates/upstart/default/program.conf.tmpl
-package main
+package export
 
 import (
 	"bytes"
@@ -101,7 +101,7 @@ func templatesLaunchdLaunchdPlistTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/launchd/launchd.plist.tmpl", size: 1294, mode: os.FileMode(420), modTime: time.Unix(1584491772, 0)}
+	info := bindataFileInfo{name: "templates/launchd/launchd.plist.tmpl", size: 1294, mode: os.FileMode(420), modTime: time.Unix(1603738030, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -121,7 +121,7 @@ func templatesRunitLogRunTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/runit/log/run.tmpl", size: 186, mode: os.FileMode(420), modTime: time.Unix(1584491772, 0)}
+	info := bindataFileInfo{name: "templates/runit/log/run.tmpl", size: 186, mode: os.FileMode(420), modTime: time.Unix(1603738030, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -141,7 +141,7 @@ func templatesRunitRunTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/runit/run.tmpl", size: 154, mode: os.FileMode(420), modTime: time.Unix(1584472497, 0)}
+	info := bindataFileInfo{name: "templates/runit/run.tmpl", size: 154, mode: os.FileMode(420), modTime: time.Unix(1603738030, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -161,7 +161,7 @@ func templatesSystemdDefaultControlTargetTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/systemd/default/control.target.tmpl", size: 106, mode: os.FileMode(420), modTime: time.Unix(1584472497, 0)}
+	info := bindataFileInfo{name: "templates/systemd/default/control.target.tmpl", size: 106, mode: os.FileMode(420), modTime: time.Unix(1603738030, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -181,7 +181,7 @@ func templatesSystemdDefaultProgramServiceTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/systemd/default/program.service.tmpl", size: 876, mode: os.FileMode(420), modTime: time.Unix(1584491772, 0)}
+	info := bindataFileInfo{name: "templates/systemd/default/program.service.tmpl", size: 876, mode: os.FileMode(420), modTime: time.Unix(1603738030, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -201,7 +201,7 @@ func templatesSystemdUserDefaultProgramServiceTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/systemd-user/default/program.service.tmpl", size: 551, mode: os.FileMode(420), modTime: time.Unix(1584491772, 0)}
+	info := bindataFileInfo{name: "templates/systemd-user/default/program.service.tmpl", size: 551, mode: os.FileMode(420), modTime: time.Unix(1603738030, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -221,7 +221,7 @@ func templatesSysvDefaultInitShTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/sysv/default/init.sh.tmpl", size: 6176, mode: os.FileMode(420), modTime: time.Unix(1584491772, 0)}
+	info := bindataFileInfo{name: "templates/sysv/default/init.sh.tmpl", size: 6176, mode: os.FileMode(420), modTime: time.Unix(1603738030, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -241,7 +241,7 @@ func templatesUpstartDefaultControlConfTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/upstart/default/control.conf.tmpl", size: 76, mode: os.FileMode(420), modTime: time.Unix(1584472497, 0)}
+	info := bindataFileInfo{name: "templates/upstart/default/control.conf.tmpl", size: 76, mode: os.FileMode(420), modTime: time.Unix(1603738030, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -261,7 +261,7 @@ func templatesUpstartDefaultProcessTypeConfTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/upstart/default/process-type.conf.tmpl", size: 120, mode: os.FileMode(420), modTime: time.Unix(1584472497, 0)}
+	info := bindataFileInfo{name: "templates/upstart/default/process-type.conf.tmpl", size: 120, mode: os.FileMode(420), modTime: time.Unix(1603738030, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -281,7 +281,7 @@ func templatesUpstartDefaultProgramConfTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/upstart/default/program.conf.tmpl", size: 983, mode: os.FileMode(420), modTime: time.Unix(1584491772, 0)}
+	info := bindataFileInfo{name: "templates/upstart/default/program.conf.tmpl", size: 983, mode: os.FileMode(420), modTime: time.Unix(1603738030, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

@@ -23,6 +23,7 @@ validation/*
 # .env files
 .env*
 
-*Procfile
+*.Procfile
+!fixtures/**/*Procfile
 
 procfile-util

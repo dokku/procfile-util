@@ -5,7 +5,7 @@ MAINTAINER_NAME = Jose Diaz-Gonzalez
 REPOSITORY = go-procfile-util
 HARDWARE = $(shell uname -m)
 SYSTEM_NAME  = $(shell uname -s | tr '[:upper:]' '[:lower:]')
-BASE_VERSION ?= 0.10.1
+BASE_VERSION ?= 0.11.0
 IMAGE_NAME ?= $(MAINTAINER)/$(REPOSITORY)
 PACKAGECLOUD_REPOSITORY ?= dokku/dokku-betafish
 
@@ -162,7 +162,8 @@ validate:
 	ls -lah build/deb build/rpm validation
 	sha1sum build/deb/$(NAME)_$(VERSION)_amd64.deb
 	sha1sum build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm
+	bats test.bats
 
 prebuild:
 	go get -u github.com/go-bindata/go-bindata/...
-	go-bindata templates/...
+	cd export && go-bindata -pkg export templates/...
