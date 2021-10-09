@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 export SYSTEM_NAME="$(uname -s | tr '[:upper:]' '[:lower:]')"
-export PROCFILE_BIN="build/$SYSTEM_NAME/procfile-util"
+export PROCFILE_BIN="build/$SYSTEM_NAME/procfile-util-amd64"
 
 setup_file() {
   make prebuild $PROCFILE_BIN
