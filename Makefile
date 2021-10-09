@@ -2,7 +2,7 @@ NAME = procfile-util
 EMAIL = dokku@josediazgonzalez.com
 MAINTAINER = dokku
 MAINTAINER_NAME = Jose Diaz-Gonzalez
-REPOSITORY = go-procfile-util
+REPOSITORY = procfile-util
 HARDWARE = $(shell uname -m)
 SYSTEM_NAME  = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 BASE_VERSION ?= 0.12.0
@@ -166,7 +166,7 @@ release: build bin/gh-release
 	cp build/deb/$(NAME)_$(VERSION)_amd64.deb release/$(NAME)_$(VERSION)_amd64.deb
 	cp build/deb/$(NAME)_$(VERSION)_armhf.deb release/$(NAME)_$(VERSION)_armhf.deb
 	cp build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm release/$(NAME)-$(VERSION)-1.x86_64.rpm
-	DEBUG=1 bin/gh-release create $(MAINTAINER)/$(REPOSITORY) $(VERSION) $(shell git rev-parse --abbrev-ref HEAD)
+	bin/gh-release create $(MAINTAINER)/$(REPOSITORY) $(VERSION) $(shell git rev-parse --abbrev-ref HEAD)
 
 release-packagecloud:
 	@$(MAKE) release-packagecloud-deb

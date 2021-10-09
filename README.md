@@ -1,4 +1,4 @@
-# go-procfile-util
+# procfile-util
 
 A tool for interacting with Procfiles.
 
@@ -7,7 +7,7 @@ A tool for interacting with Procfiles.
 Install it using the "go get" command:
 
 ```shell
-go get github.com/josegonzalez/go-procfile-util
+go get github.com/dokku/procfile-util
 ```
 
 ## What is a Procfile
