@@ -154,7 +154,7 @@ docker-image:
 
 bin/gh-release:
 	mkdir -p bin
-	curl -o bin/gh-release.tgz -sL https://github.com/progrium/gh-release/releases/download/v2.3.0/gh-release_2.3.0_$(SYSTEM_NAME)_$(HARDWARE).tgz
+	curl -o bin/gh-release.tgz -sL https://github.com/progrium/gh-release/releases/download/v2.3.1/gh-release_2.3.1_$(SYSTEM_NAME)_$(HARDWARE).tgz
 	tar xf bin/gh-release.tgz -C bin
 	chmod +x bin/gh-release
 
@@ -166,7 +166,7 @@ release: build bin/gh-release
 	cp build/deb/$(NAME)_$(VERSION)_amd64.deb release/$(NAME)_$(VERSION)_amd64.deb
 	cp build/deb/$(NAME)_$(VERSION)_armhf.deb release/$(NAME)_$(VERSION)_armhf.deb
 	cp build/rpm/$(NAME)-$(VERSION)-1.x86_64.rpm release/$(NAME)-$(VERSION)-1.x86_64.rpm
-	bin/gh-release create $(MAINTAINER)/$(REPOSITORY) $(VERSION) $(shell git rev-parse --abbrev-ref HEAD)
+	DEBUG=1 bin/gh-release create $(MAINTAINER)/$(REPOSITORY) $(VERSION) $(shell git rev-parse --abbrev-ref HEAD)
 
 release-packagecloud:
 	@$(MAKE) release-packagecloud-deb
