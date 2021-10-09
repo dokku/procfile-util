@@ -32,7 +32,7 @@ Finally, process types within a Procfile may not overlap and must be unique. Rat
 
 ### Strict Mode
 
-> Strict mode can be triggered on `go-procfile-util` via the `--strict` flag.
+> Strict mode can be triggered on `procfile-util` via the `--strict` flag.
 
 In strict mode, the character set of a process type changes.
 
