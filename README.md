@@ -1,4 +1,4 @@
-# go-procfile-util [![CircleCI](https://circleci.com/gh/josegonzalez/go-procfile-util.svg?style=svg)](https://circleci.com/gh/josegonzalez/go-procfile-util)
+# go-procfile-util
 
 A tool for interacting with Procfiles.
 
@@ -6,7 +6,9 @@ A tool for interacting with Procfiles.
 
 Install it using the "go get" command:
 
-    go get github.com/josegonzalez/go-procfile-util
+```shell
+go get github.com/josegonzalez/go-procfile-util
+```
 
 ## What is a Procfile
 
