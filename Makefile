@@ -249,5 +249,7 @@ validate:
 	bats test.bats
 
 prebuild:
+	git config --global --add safe.directory $(shell pwd)
+	git status
 	go install github.com/go-bindata/go-bindata/...@latest
 	cd export && go-bindata -pkg export templates/...
