@@ -1,4 +1,4 @@
-FROM golang:1.19.5-bullseye
+FROM golang:1.20.0-bullseye
 
 # hadolint ignore=DL3027
 RUN apt-get update \
