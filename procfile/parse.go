@@ -38,6 +38,7 @@ func ParseProcfile(text string, delimiter string, strict bool) ([]ProcfileEntry,
 	reOldCmd, _ := regexp.Compile(`^([A-Za-z0-9_-]+)` + delimiter + `\s*(.+)$`)
 
 	reComment, _ := regexp.Compile(`^(.*)\s#.+$`)
+	reForwardslashComment, _ := regexp.Compile(`^(.*)\s//.+$`)
 
 	lineNumber := 0
 	names := make(map[string]bool)
@@ -55,7 +56,7 @@ func ParseProcfile(text string, delimiter string, strict bool) ([]ProcfileEntry,
 		params := reCmd.FindStringSubmatch(line)
 		isCommand := len(params) == 4
 		isOldCommand := len(oldParams) == 3
-		isComment := strings.HasPrefix(line, "#")
+		isComment := strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//")
 		if isComment {
 			continue
 		}
@@ -88,12 +89,15 @@ func ParseProcfile(text string, delimiter string, strict bool) ([]ProcfileEntry,
 		names[name] = true
 
 		commentParams := reComment.FindStringSubmatch(cmd)
+		reForwardslashCommentParams := reForwardslashComment.FindStringSubmatch(cmd)
 		if len(commentParams) == 2 {
 			cmd = commentParams[1]
+		} else if len(reForwardslashCommentParams) == 2 {
+			cmd = reForwardslashCommentParams[1]
 		}
 
 		cmd = strings.TrimSpace(cmd)
-		if strings.HasPrefix(cmd, "#") {
+		if strings.HasPrefix(cmd, "#") || strings.HasPrefix(cmd, "//") {
 			return entries, fmt.Errorf("comment specified in place of command, line %d", lineNumber)
 		}
 
