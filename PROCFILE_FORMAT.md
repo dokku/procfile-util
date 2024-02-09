@@ -6,9 +6,9 @@ A Procfile is a file that was [promoted by Heroku](https://blog.heroku.com/the_n
 
 The `procfile-util` tool expects a Procfile to be defined as one or more lines containing one of:
 
-- a comment (preceeded by a `#` symbol)
+- a comment (preceeded by a `#` symbol or two `//` characters)
 - a process-type/command combination (with optional trailing whitespace or trailing comment)
-  - when there is a trailing comment, the `#` symbol _must_ be preceeded by one or more `whitespace` characters.
+  - when there is a trailing comment, the `#` symbol/`//` characters _must_ be preceeded by one or more `whitespace` characters.
 - a blank line (with optional trailing whitespace)
 
 Comments and blank lines are ignored, while process-type/command combinations look like the following:
