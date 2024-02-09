@@ -19,6 +19,20 @@ teardown_file() {
   assert_output_contains "valid procfile detected 2custom, cron, custom, release, web, wor-ker"
 }
 
+@test "[lax] forwardslash-comments" {
+  run $PROCFILE_BIN check -P fixtures/forwardslash-comments.Procfile
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output_contains "valid procfile detected web, worker, worker-2"
+
+  run $PROCFILE_BIN show -P fixtures/forwardslash-comments.Procfile -p worker
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output_contains "node worker.js"
+}
+
 @test "[lax] multiple" {
   run $PROCFILE_BIN check -P fixtures/multiple.Procfile
   echo "output: $output"
@@ -47,6 +61,20 @@ teardown_file() {
   echo "status: $status"
   [[ "$status" -eq 0 ]]
   assert_output_contains "valid procfile detected 2custom, cron, custom, release, web, wor-ker"
+}
+
+@test "[strict] forwardslash-comments" {
+  run $PROCFILE_BIN check -S -P fixtures/forwardslash-comments.Procfile
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output_contains "valid procfile detected web, worker, worker-2"
+
+  run $PROCFILE_BIN show -S -P fixtures/forwardslash-comments.Procfile -p worker
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output_contains "node worker.js"
 }
 
 @test "[strict] multiple" {
