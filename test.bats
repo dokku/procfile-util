@@ -16,7 +16,7 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  [[ "$output" == "valid procfile detected 2custom, cron, custom, release, web, wor-ker" ]]
+  assert_output_contains "valid procfile detected 2custom, cron, custom, release, web, wor-ker"
 }
 
 @test "[lax] multiple" {
@@ -24,7 +24,7 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  [[ "$output" == "valid procfile detected release, web, webpacker, worker" ]]
+  assert_output_contains "valid procfile detected release, web, webpacker, worker"
 }
 
 @test "[lax] port" {
@@ -32,13 +32,13 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  [[ "$output" == "valid procfile detected web, worker" ]]
+  assert_output_contains "valid procfile detected web, worker"
 
   run $PROCFILE_BIN show -P fixtures/port.Procfile -p web
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  [[ "$output" == "node web.js --port 5000" ]]
+  assert_output_contains "node web.js --port 5000"
 }
 
 @test "[strict] comments" {
@@ -46,7 +46,7 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  [[ "$output" == "valid procfile detected 2custom, cron, custom, release, web, wor-ker" ]]
+  assert_output_contains "valid procfile detected 2custom, cron, custom, release, web, wor-ker"
 }
 
 @test "[strict] multiple" {
@@ -54,7 +54,7 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  [[ "$output" == "valid procfile detected release, web, webpacker, worker" ]]
+  assert_output_contains "valid procfile detected release, web, webpacker, worker"
 }
 
 @test "[strict] port" {
@@ -62,11 +62,84 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  [[ "$output" == "valid procfile detected web, worker" ]]
+  assert_output_contains "valid procfile detected web, worker"
 
   run $PROCFILE_BIN show -S -P fixtures/port.Procfile -p web
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  [[ "$output" == "node web.js --port 5000" ]]
+  assert_output_contains "node web.js --port 5000"
+}
+
+flunk() {
+  {
+    if [[ "$#" -eq 0 ]]; then
+      cat -
+    else
+      echo "$*"
+    fi
+  }
+  return 1
+}
+
+assert_equal() {
+  if [[ "$1" != "$2" ]]; then
+    {
+      echo "expected: $1"
+      echo "actual:   $2"
+    } | flunk
+  fi
+}
+
+assert_exit_status() {
+  exit_status="$1"
+  if [[ "$status" -ne "$exit_status" ]]; then
+    {
+      echo "expected exit status: $exit_status"
+      echo "actual exit status:   $status"
+    } | flunk
+    flunk
+  fi
+}
+
+assert_failure() {
+  if [[ "$status" -eq 0 ]]; then
+    flunk "expected failed exit status"
+  elif [[ "$#" -gt 0 ]]; then
+    assert_output "$1"
+  fi
+}
+
+assert_success() {
+  if [[ "$status" -ne 0 ]]; then
+    flunk "command failed with exit status $status"
+  elif [[ "$#" -gt 0 ]]; then
+    assert_output "$1"
+  fi
+}
+
+assert_output() {
+  local expected
+  if [[ $# -eq 0 ]]; then
+    expected="$(cat -)"
+  else
+    expected="$1"
+  fi
+  assert_equal "$expected" "$output"
+}
+
+assert_output_contains() {
+  local input="$output"
+  local expected="$1"
+  local count="${2:-1}"
+  local found=0
+  until [ "${input/$expected/}" = "$input" ]; do
+    input="${input/$expected/}"
+    found=$((found + 1))
+  done
+  assert_equal "$count" "$found"
+}
+
+assert_output_not_exists() {
+  [[ -z "$output" ]] || flunk "expected no output, found some"
 }

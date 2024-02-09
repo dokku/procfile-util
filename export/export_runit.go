@@ -6,17 +6,19 @@ import (
 	"strconv"
 
 	"procfile-util/procfile"
+
+	"github.com/mitchellh/cli"
 )
 
-func ExportRunit(app string, entries []procfile.ProcfileEntry, formations map[string]procfile.FormationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
+func ExportRunit(app string, entries []procfile.ProcfileEntry, formations map[string]procfile.FormationEntry, location string, defaultPort int, vars map[string]interface{}, ui cli.Ui) bool {
 	r, err := loadTemplate("run", "templates/runit/run.tmpl")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		ui.Error(err.Error())
 		return false
 	}
 	l, err := loadTemplate("log", "templates/runit/log/run.tmpl")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		ui.Error(err.Error())
 		return false
 	}
 
@@ -33,25 +35,26 @@ func ExportRunit(app string, entries []procfile.ProcfileEntry, formations map[st
 			folderPath := location + "/service/" + processDirectory
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 
-			fmt.Println("creating:", folderPath)
+			ui.Output(fmt.Sprintf("creating: %s", folderPath))
 			os.MkdirAll(folderPath, os.ModePerm)
 
-			fmt.Println("creating:", folderPath+"/env")
+			ui.Output(fmt.Sprintf("creating: %s/env", folderPath))
 			os.MkdirAll(folderPath+"/env", os.ModePerm)
 
-			fmt.Println("creating:", folderPath+"/log")
+			ui.Output(fmt.Sprintf("creating:  %s/log", folderPath))
 			os.MkdirAll(folderPath+"/log", os.ModePerm)
 
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
 
-			if !writeOutput(r, fmt.Sprintf("%s/run", folderPath), config) {
+			if err := writeOutput(r, fmt.Sprintf("%s/run", folderPath), config); err != nil {
+				ui.Error(err.Error())
 				return false
 			}
 
 			env, ok := config["env"].(map[string]string)
 			if !ok {
-				fmt.Fprintf(os.Stderr, "invalid env map\n")
+				ui.Error("Invalid env map")
 				return false
 			}
 
@@ -59,26 +62,27 @@ func ExportRunit(app string, entries []procfile.ProcfileEntry, formations map[st
 			env["PS"] = app + "-" + processName
 
 			for key, value := range env {
-				fmt.Println("writing:", folderPath+"/env/"+key)
+				ui.Output(fmt.Sprintf("writing:  %s/env/%s", folderPath, key))
 				f, err := os.Create(folderPath + "/env/" + key)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
+					ui.Error(fmt.Sprintf("Error creating file: %s", err))
 					return false
 				}
 				defer f.Close()
 
 				if _, err = f.WriteString(value); err != nil {
-					fmt.Fprintf(os.Stderr, "error writing output: %s\n", err)
+					ui.Error(fmt.Sprintf("Error writing output: %s", err))
 					return false
 				}
 
 				if err = f.Sync(); err != nil {
-					fmt.Fprintf(os.Stderr, "error syncing output: %s\n", err)
+					ui.Error(fmt.Sprintf("Error syncing output: %s", err))
 					return false
 				}
 			}
 
-			if !writeOutput(l, fmt.Sprintf("%s/log/run", folderPath), config) {
+			if err := writeOutput(l, fmt.Sprintf("%s/log/run", folderPath), config); err != nil {
+				ui.Error(err.Error())
 				return false
 			}
 
