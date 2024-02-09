@@ -91,6 +91,11 @@ func (c *ShowCommand) Run(args []string) int {
 	}
 
 	entries, err := parseProcfile(c.procfile, c.delimiter, c.strict)
+	if err != nil {
+		c.Ui.Error(err.Error())
+		return 1
+	}
+
 	if len(entries) == 0 {
 		c.Ui.Error("No processes defined")
 		return 1

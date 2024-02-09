@@ -95,13 +95,21 @@ func (c *SetCommand) Run(args []string) int {
 	}
 
 	entries, err := parseProcfile(c.procfile, c.delimiter, c.strict)
+	if err != nil {
+		c.Ui.Error(err.Error())
+		return 1
+	}
+
 	if len(entries) == 0 {
 		c.Ui.Error("No processes defined")
 		return 1
 	}
 
 	var validEntries []procfile.ProcfileEntry
-	validEntries = append(validEntries, procfile.ProcfileEntry{c.processType, c.command})
+	validEntries = append(validEntries, procfile.ProcfileEntry{
+		Name:    c.processType,
+		Command: c.command,
+	})
 	for _, entry := range entries {
 		if c.processType == entry.Name {
 			continue
