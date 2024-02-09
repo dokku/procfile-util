@@ -5,24 +5,26 @@ import (
 	"os"
 
 	"procfile-util/procfile"
+
+	"github.com/mitchellh/cli"
 )
 
-func ExportUpstart(app string, entries []procfile.ProcfileEntry, formations map[string]procfile.FormationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
+func ExportUpstart(app string, entries []procfile.ProcfileEntry, formations map[string]procfile.FormationEntry, location string, defaultPort int, vars map[string]interface{}, ui cli.Ui) bool {
 	p, err := loadTemplate("program", "templates/upstart/default/program.conf.tmpl")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		ui.Error(err.Error())
 		return false
 	}
 
 	c, err := loadTemplate("app", "templates/upstart/default/control.conf.tmpl")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		ui.Error(err.Error())
 		return false
 	}
 
 	t, err := loadTemplate("process-type", "templates/upstart/default/process-type.conf.tmpl")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		ui.Error(err.Error())
 		return false
 	}
 
@@ -37,7 +39,8 @@ func ExportUpstart(app string, entries []procfile.ProcfileEntry, formations map[
 		if count > 0 {
 			config := vars
 			config["process_type"] = entry.Name
-			if !writeOutput(t, fmt.Sprintf("%s/etc/init/%s-%s.conf", location, app, entry.Name), config) {
+			if err := writeOutput(t, fmt.Sprintf("%s/etc/init/%s-%s.conf", location, app, entry.Name), config); err != nil {
+				ui.Error(err.Error())
 				return false
 			}
 		}
@@ -47,7 +50,8 @@ func ExportUpstart(app string, entries []procfile.ProcfileEntry, formations map[
 			fileName := fmt.Sprintf("%s-%d", entry.Name, num)
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if !writeOutput(p, fmt.Sprintf("%s/etc/init/%s-%s.conf", location, app, fileName), config) {
+			if err := writeOutput(p, fmt.Sprintf("%s/etc/init/%s-%s.conf", location, app, fileName), config); err != nil {
+				ui.Error(err.Error())
 				return false
 			}
 
@@ -56,5 +60,10 @@ func ExportUpstart(app string, entries []procfile.ProcfileEntry, formations map[
 	}
 
 	config := vars
-	return writeOutput(c, fmt.Sprintf("%s/etc/init/%s.conf", location, app), config)
+	if err := writeOutput(c, fmt.Sprintf("%s/etc/init/%s.conf", location, app), config); err != nil {
+		ui.Error(err.Error())
+		return false
+	}
+
+	return true
 }

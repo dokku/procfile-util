@@ -3,15 +3,24 @@ package commands
 import (
 	"io/ioutil"
 	"os"
+	"procfile-util/procfile"
 	"strconv"
 	"strings"
-
-	"procfile-util/procfile"
 
 	"github.com/joho/godotenv"
 )
 
 const portEnvVar = "PORT"
+
+func parseProcfile(path string, delimiter string, strict bool) ([]procfile.ProcfileEntry, error) {
+	var entries []procfile.ProcfileEntry
+	text, err := procfile.GetProcfileContent(path)
+	if err != nil {
+		return entries, err
+	}
+
+	return procfile.ParseProcfile(text, delimiter, strict)
+}
 
 func expandEnv(e procfile.ProcfileEntry, envPath string, allowEnv bool, defaultPort int) (string, error) {
 	baseExpandFunc := func(key string) string {

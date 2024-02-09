@@ -7,9 +7,11 @@ import (
 	"text/template"
 
 	"procfile-util/procfile"
+
+	"github.com/mitchellh/cli"
 )
 
-type ExportFunc func(string, []procfile.ProcfileEntry, map[string]procfile.FormationEntry, string, int, map[string]interface{}) bool
+type ExportFunc func(string, []procfile.ProcfileEntry, map[string]procfile.FormationEntry, string, int, map[string]interface{}, cli.Ui) bool
 
 func processCount(entry procfile.ProcfileEntry, formations map[string]procfile.FormationEntry) int {
 	count := 0
@@ -45,26 +47,23 @@ func templateVars(app string, entry procfile.ProcfileEntry, processName string, 
 	return config
 }
 
-func writeOutput(t *template.Template, outputPath string, variables map[string]interface{}) bool {
+func writeOutput(t *template.Template, outputPath string, variables map[string]interface{}) error {
 	fmt.Println("writing:", outputPath)
 	f, err := os.Create(outputPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error creating file: %s\n", err)
-		return false
+		return fmt.Errorf("error creating file: %w", err)
 	}
 	defer f.Close()
 
 	if err = t.Execute(f, variables); err != nil {
-		fmt.Fprintf(os.Stderr, "error writing output: %s\n", err)
-		return false
+		return fmt.Errorf("error writing output: %w", err)
 	}
 
 	if err := os.Chmod(outputPath, 0755); err != nil {
-		fmt.Fprintf(os.Stderr, "error setting mode: %s\n", err)
-		return false
+		return fmt.Errorf("error setting mode: %w", err)
 	}
 
-	return true
+	return nil
 }
 
 func loadTemplate(name string, filename string) (*template.Template, error) {

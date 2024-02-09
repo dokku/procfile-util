@@ -5,12 +5,14 @@ import (
 	"os"
 
 	"procfile-util/procfile"
+
+	"github.com/mitchellh/cli"
 )
 
-func ExportSystemdUser(app string, entries []procfile.ProcfileEntry, formations map[string]procfile.FormationEntry, location string, defaultPort int, vars map[string]interface{}) bool {
+func ExportSystemdUser(app string, entries []procfile.ProcfileEntry, formations map[string]procfile.FormationEntry, location string, defaultPort int, vars map[string]interface{}, ui cli.Ui) bool {
 	s, err := loadTemplate("service", "templates/systemd-user/default/program.service.tmpl")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		ui.Error(err.Error())
 		return false
 	}
 
@@ -27,7 +29,8 @@ func ExportSystemdUser(app string, entries []procfile.ProcfileEntry, formations 
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if !writeOutput(s, fmt.Sprintf("%s%s%s-%s.service", location, path, app, processName), config) {
+			if err := writeOutput(s, fmt.Sprintf("%s%s%s-%s.service", location, path, app, processName), config); err != nil {
+				ui.Error(err.Error())
 				return false
 			}
 
@@ -35,6 +38,6 @@ func ExportSystemdUser(app string, entries []procfile.ProcfileEntry, formations 
 		}
 	}
 
-	fmt.Println("You will want to run 'systemctl --user daemon-reload' to activate the service on the target host")
+	ui.Output("You will want to run 'systemctl --user daemon-reload' to activate the service on the target host")
 	return true
 }

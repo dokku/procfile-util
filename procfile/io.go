@@ -2,6 +2,7 @@ package procfile
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -35,10 +36,9 @@ func GetProcfileContent(path string) (string, error) {
 	return strings.Join(lines, "\n"), err
 }
 
-func OutputProcfile(path string, writePath string, delimiter string, stdout bool, entries []ProcfileEntry) bool {
+func OutputProcfile(path string, writePath string, delimiter string, stdout bool, entries []ProcfileEntry) error {
 	if writePath != "" && stdout {
-		fmt.Fprintf(os.Stderr, "cannot specify both --stdout and --write-path flags\n")
-		return false
+		return errors.New("cannot specify both --stdout and --write-path flags")
 	}
 
 	sort.Slice(entries, func(i, j int) bool {
@@ -49,7 +49,7 @@ func OutputProcfile(path string, writePath string, delimiter string, stdout bool
 		for _, entry := range entries {
 			fmt.Printf("%v%v %v\n", entry.Name, delimiter, entry.Command)
 		}
-		return true
+		return nil
 	}
 
 	if writePath != "" {
@@ -57,11 +57,10 @@ func OutputProcfile(path string, writePath string, delimiter string, stdout bool
 	}
 
 	if err := writeProcfile(path, delimiter, entries); err != nil {
-		fmt.Fprintf(os.Stderr, "error writing procfile: %s\n", err)
-		return false
+		return fmt.Errorf("error writing procfile: %s", err)
 	}
 
-	return true
+	return nil
 }
 
 func writeProcfile(path string, delimiter string, entries []ProcfileEntry) error {
