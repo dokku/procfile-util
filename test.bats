@@ -16,7 +16,24 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  assert_output_contains "valid procfile detected 2custom, cron, custom, release, web, wor-ker"
+  assert_output "valid procfile detected 2custom, cron, custom, release, web, wor-ker"
+
+  run $PROCFILE_BIN list -P fixtures/comments.Procfile
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output "2custom
+cron
+custom
+release
+web
+wor-ker"
+
+  run $PROCFILE_BIN show -P fixtures/comments.Procfile -p web
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output "node web.js"
 }
 
 @test "[lax] forwardslash-comments" {
@@ -24,13 +41,21 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  assert_output_contains "valid procfile detected web, worker, worker-2"
+  assert_output "valid procfile detected web, worker, worker-2"
 
   run $PROCFILE_BIN show -P fixtures/forwardslash-comments.Procfile -p worker
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  assert_output_contains "node worker.js"
+  assert_output "node worker.js"
+
+  run $PROCFILE_BIN list -P fixtures/forwardslash-comments.Procfile
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output "web
+worker
+worker-2"
 }
 
 @test "[lax] multiple" {
@@ -38,7 +63,16 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  assert_output_contains "valid procfile detected release, web, webpacker, worker"
+  assert_output "valid procfile detected release, web, webpacker, worker"
+
+  run $PROCFILE_BIN list -P fixtures/multiple.Procfile
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output "release
+web
+webpacker
+worker"
 }
 
 @test "[lax] port" {
@@ -46,13 +80,20 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  assert_output_contains "valid procfile detected web, worker"
+  assert_output "valid procfile detected web, worker"
 
   run $PROCFILE_BIN show -P fixtures/port.Procfile -p web
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  assert_output_contains "node web.js --port 5000"
+  assert_output "node web.js --port 5000"
+
+  run $PROCFILE_BIN list -P fixtures/port.Procfile
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output "web
+worker"
 }
 
 @test "[strict] comments" {
@@ -60,7 +101,18 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  assert_output_contains "valid procfile detected 2custom, cron, custom, release, web, wor-ker"
+  assert_output "valid procfile detected 2custom, cron, custom, release, web, wor-ker"
+
+  run $PROCFILE_BIN list -S -P fixtures/comments.Procfile
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output "2custom
+cron
+custom
+release
+web
+wor-ker"
 }
 
 @test "[strict] forwardslash-comments" {
@@ -68,13 +120,21 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  assert_output_contains "valid procfile detected web, worker, worker-2"
+  assert_output "valid procfile detected web, worker, worker-2"
 
   run $PROCFILE_BIN show -S -P fixtures/forwardslash-comments.Procfile -p worker
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  assert_output_contains "node worker.js"
+  assert_output "node worker.js"
+
+  run $PROCFILE_BIN list -S -P fixtures/forwardslash-comments.Procfile
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output "web
+worker
+worker-2"
 }
 
 @test "[strict] multiple" {
@@ -82,7 +142,16 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  assert_output_contains "valid procfile detected release, web, webpacker, worker"
+  assert_output "valid procfile detected release, web, webpacker, worker"
+
+  run $PROCFILE_BIN list -S -P fixtures/multiple.Procfile
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output "release
+web
+webpacker
+worker"
 }
 
 @test "[strict] port" {
@@ -90,13 +159,20 @@ teardown_file() {
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  assert_output_contains "valid procfile detected web, worker"
+  assert_output "valid procfile detected web, worker"
 
   run $PROCFILE_BIN show -S -P fixtures/port.Procfile -p web
   echo "output: $output"
   echo "status: $status"
   [[ "$status" -eq 0 ]]
-  assert_output_contains "node web.js --port 5000"
+  assert_output "node web.js --port 5000"
+
+  run $PROCFILE_BIN list -S -P fixtures/port.Procfile
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output "web
+worker"
 }
 
 flunk() {
