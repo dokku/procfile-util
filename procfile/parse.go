@@ -34,8 +34,8 @@ func ParseFormation(formation string) (map[string]FormationEntry, error) {
 // ParseProcfile parses text as a procfile and returns a list of procfile entries
 func ParseProcfile(text string, delimiter string, strict bool) ([]ProcfileEntry, error) {
 	var entries []ProcfileEntry
-	reCmd, _ := regexp.Compile(`^([a-z0-9]([-a-z0-9]*[a-z0-9])?)` + delimiter + `\s*(.+)$`)
-	reOldCmd, _ := regexp.Compile(`^([A-Za-z0-9_-]+)` + delimiter + `\s*(.+)$`)
+	reCmd, _ := regexp.Compile(`^([a-z0-9]([-a-z0-9]*[a-z0-9])?)\s*` + delimiter + `\s*(.+)$`)
+	reOldCmd, _ := regexp.Compile(`^([A-Za-z0-9_-]+)\s*` + delimiter + `\s*(.+)$`)
 
 	reComment, _ := regexp.Compile(`^(.*)\s#.+$`)
 	reForwardslashComment, _ := regexp.Compile(`^(.*)\s//.+$`)

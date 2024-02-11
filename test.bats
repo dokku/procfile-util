@@ -28,6 +28,12 @@ custom
 release
 web
 wor-ker"
+
+  run $PROCFILE_BIN show -P fixtures/comments.Procfile -p web
+  echo "output: $output"
+  echo "status: $status"
+  [[ "$status" -eq 0 ]]
+  assert_output "node web.js"
 }
 
 @test "[lax] forwardslash-comments" {
@@ -183,8 +189,8 @@ flunk() {
 assert_equal() {
   if [[ "$1" != "$2" ]]; then
     {
-      echo "expected: '$1'"
-      echo "actual:   '$2'"
+      echo "expected: $1"
+      echo "actual:   $2"
     } | flunk
   fi
 }
