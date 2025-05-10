@@ -22,10 +22,6 @@ The syntax is defined as follows:
 - `<process type>` – any character in the class `[A-Za-z0-9_-]+`, a process type is a name for your command, such as `web`, `worker`, `urgentworker`, `clock`, etc.
 - `<command>` – a command used to launch the process, such as `rake jobs:work`
 
-Additional rules are as follows:
-
-- contain at most 63 characters
-
 A Procfile that does not match any of the above rules will be considered invalid, and not be processed. This is to avoid issues where a Procfile may contain merge conflicts or other improper content, thus resulting in unwanted runtime behavior for applications.
 
 Finally, process types within a Procfile may not overlap and must be unique. Rather than assuming that the last or first specified is correct, `procfile-util` will fail to parse the Procfile with the relevant error.
