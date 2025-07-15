@@ -8,6 +8,7 @@ import (
 	"github.com/josegonzalez/cli-skeleton/command"
 	"github.com/posener/complete"
 	flag "github.com/spf13/pflag"
+	"gopkg.in/alessio/shellescape.v1"
 )
 
 type ShowCommand struct {
@@ -120,7 +121,7 @@ func (c *ShowCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.Ui.Output(command)
+	c.Ui.Output(shellescape.Quote(command))
 
 	return 0
 }
