@@ -22,6 +22,8 @@ func parseProcfile(path string, delimiter string, strict bool) ([]procfile.Procf
 	return procfile.ParseProcfile(text, delimiter, strict)
 }
 
+// expandEnv expands environment variables in a Procfile command using multiple sources:
+// built-in vars (PS, PORT), optional .env file, and system environment variables
 func expandEnv(e procfile.ProcfileEntry, envPath string, allowEnv bool, defaultPort int) (string, error) {
 	baseExpandFunc := func(key string) string {
 		if key == "PS" {
