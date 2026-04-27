@@ -1,0 +1,16 @@
+docs:
+  - getting-started.md
+  - procfile-format.md
+  - variable-expansion.md
+  - process-managers.md
+  - dokku-integration.md
+  - ci-usage.md
+  - tasks/README.md
+  - tasks/check.md
+  - tasks/list.md
+  - tasks/exists.md
+  - tasks/show.md
+  - tasks/expand.md
+  - tasks/set.md
+  - tasks/delete.md
+  - tasks/export.md
