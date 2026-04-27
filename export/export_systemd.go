@@ -38,7 +38,7 @@ func ExportSystemd(app string, entries []procfile.ProcfileEntry, formations map[
 
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if err := writeOutput(s, fmt.Sprintf("%s/etc/systemd/system/%s-%s.service", location, app, fileName), config); err != nil {
+			if err := writeOutput(s, fmt.Sprintf("%s/etc/systemd/system/%s-%s.service", location, app, fileName), 0644, config); err != nil {
 				ui.Error(err.Error())
 				return false
 			}
@@ -49,7 +49,7 @@ func ExportSystemd(app string, entries []procfile.ProcfileEntry, formations map[
 
 	config := vars
 	config["processes"] = processes
-	if err := writeOutput(t, fmt.Sprintf("%s/etc/systemd/system/%s.target", location, app), config); err != nil {
+	if err := writeOutput(t, fmt.Sprintf("%s/etc/systemd/system/%s.target", location, app), 0644, config); err != nil {
 		ui.Error(err.Error())
 		ui.Output("You will want to run 'systemctl --system daemon-reload' to activate the service on the target host")
 		return true

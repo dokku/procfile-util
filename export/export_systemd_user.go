@@ -29,7 +29,7 @@ func ExportSystemdUser(app string, entries []procfile.ProcfileEntry, formations 
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if err := writeOutput(s, fmt.Sprintf("%s%s%s-%s.service", location, path, app, processName), config); err != nil {
+			if err := writeOutput(s, fmt.Sprintf("%s%s%s-%s.service", location, path, app, processName), 0644, config); err != nil {
 				ui.Error(err.Error())
 				return false
 			}

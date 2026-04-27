@@ -1,4 +1,5 @@
 #!/bin/sh
+ENVDIR="$PWD/env"
 cd {{ .working_directory }}
 exec 2>&1
-exec chpst -u {{ .user }} -e {{ .location }}/{{ .app }}-{{ .process_type }}-{{ .num }}/env {{ .command }}
+exec chpst -u {{ .user }} -e "$ENVDIR" {{ .command }}
