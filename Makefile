@@ -187,7 +187,7 @@ validate:
 	ls -lah build/deb validation
 	sha1sum build/deb/$(NAME)_$(VERSION)_amd64.deb
 	sha1sum build/deb/$(NAME)_$(VERSION)_arm64.deb
-	bats test.bats
+	bats test.bats test_export.bats
 
 prebuild:
 	git config --global --add safe.directory $(shell pwd)

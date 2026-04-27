@@ -39,7 +39,7 @@ func ExportUpstart(app string, entries []procfile.ProcfileEntry, formations map[
 		if count > 0 {
 			config := vars
 			config["process_type"] = entry.Name
-			if err := writeOutput(t, fmt.Sprintf("%s/etc/init/%s-%s.conf", location, app, entry.Name), config); err != nil {
+			if err := writeOutput(t, fmt.Sprintf("%s/etc/init/%s-%s.conf", location, app, entry.Name), 0644, config); err != nil {
 				ui.Error(err.Error())
 				return false
 			}
@@ -50,7 +50,7 @@ func ExportUpstart(app string, entries []procfile.ProcfileEntry, formations map[
 			fileName := fmt.Sprintf("%s-%d", entry.Name, num)
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if err := writeOutput(p, fmt.Sprintf("%s/etc/init/%s-%s.conf", location, app, fileName), config); err != nil {
+			if err := writeOutput(p, fmt.Sprintf("%s/etc/init/%s-%s.conf", location, app, fileName), 0644, config); err != nil {
 				ui.Error(err.Error())
 				return false
 			}
@@ -60,7 +60,7 @@ func ExportUpstart(app string, entries []procfile.ProcfileEntry, formations map[
 	}
 
 	config := vars
-	if err := writeOutput(c, fmt.Sprintf("%s/etc/init/%s.conf", location, app), config); err != nil {
+	if err := writeOutput(c, fmt.Sprintf("%s/etc/init/%s.conf", location, app), 0644, config); err != nil {
 		ui.Error(err.Error())
 		return false
 	}

@@ -47,7 +47,7 @@ func templateVars(app string, entry procfile.ProcfileEntry, processName string, 
 	return config
 }
 
-func writeOutput(t *template.Template, outputPath string, variables map[string]interface{}) error {
+func writeOutput(t *template.Template, outputPath string, mode os.FileMode, variables map[string]interface{}) error {
 	fmt.Println("writing:", outputPath)
 	f, err := os.Create(outputPath)
 	if err != nil {
@@ -59,7 +59,7 @@ func writeOutput(t *template.Template, outputPath string, variables map[string]i
 		return fmt.Errorf("error writing output: %w", err)
 	}
 
-	if err := os.Chmod(outputPath, 0755); err != nil {
+	if err := os.Chmod(outputPath, mode); err != nil {
 		return fmt.Errorf("error setting mode: %w", err)
 	}
 

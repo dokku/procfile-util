@@ -12,9 +12,9 @@ ExecStart={{ .command }}
 Restart=always
 RestartSec=14s
 StandardInput=null
-StandardOutput={{ .log }}/{{ .app }}-{{ .process_type }}-{{ .num }}-stdout.log
-StandardError={{ .log }}/{{ .app }}-{{ .process_type }}-{{ .num }}-stderr.log
+StandardOutput=append:{{ .log }}/{{ .app }}-{{ .process_type }}-{{ .num }}-stdout.log
+StandardError=append:{{ .log }}/{{ .app }}-{{ .process_type }}-{{ .num }}-stderr.log
 SyslogIdentifier=%n
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

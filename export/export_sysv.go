@@ -28,7 +28,7 @@ func ExportSysv(app string, entries []procfile.ProcfileEntry, formations map[str
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if err := writeOutput(l, fmt.Sprintf("%s/etc/init.d/%s-%s", location, app, processName), config); err != nil {
+			if err := writeOutput(l, fmt.Sprintf("%s/etc/init.d/%s-%s", location, app, processName), 0755, config); err != nil {
 				ui.Error(err.Error())
 				return false
 			}

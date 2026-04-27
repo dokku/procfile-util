@@ -28,7 +28,7 @@ func ExportLaunchd(app string, entries []procfile.ProcfileEntry, formations map[
 			processName := fmt.Sprintf("%s-%d", entry.Name, num)
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
-			if err := writeOutput(l, fmt.Sprintf("%s/Library/LaunchDaemons/%s-%s.plist", location, app, processName), config); err != nil {
+			if err := writeOutput(l, fmt.Sprintf("%s/Library/LaunchDaemons/%s-%s.plist", location, app, processName), 0644, config); err != nil {
 				ui.Error(err.Error())
 				return false
 			}

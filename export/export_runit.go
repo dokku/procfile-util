@@ -47,7 +47,7 @@ func ExportRunit(app string, entries []procfile.ProcfileEntry, formations map[st
 			port := portFor(i, num, defaultPort)
 			config := templateVars(app, entry, processName, num, port, vars)
 
-			if err := writeOutput(r, fmt.Sprintf("%s/run", folderPath), config); err != nil {
+			if err := writeOutput(r, fmt.Sprintf("%s/run", folderPath), 0755, config); err != nil {
 				ui.Error(err.Error())
 				return false
 			}
@@ -81,7 +81,7 @@ func ExportRunit(app string, entries []procfile.ProcfileEntry, formations map[st
 				}
 			}
 
-			if err := writeOutput(l, fmt.Sprintf("%s/log/run", folderPath), config); err != nil {
+			if err := writeOutput(l, fmt.Sprintf("%s/log/run", folderPath), 0755, config); err != nil {
 				ui.Error(err.Error())
 				return false
 			}
