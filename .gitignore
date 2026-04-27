@@ -20,6 +20,9 @@ release/*
 # Validation output
 validation/*
 
+# Local scratch directory
+tmp/
+
 # .env files
 .env*
 
